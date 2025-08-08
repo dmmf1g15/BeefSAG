@@ -13,6 +13,9 @@ import geopandas as gpd
 import warnings
 from pandas.errors import SettingWithCopyWarning
 warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
+import requests
+
+from ExtractJASManureHandlingData import map_df #for mapping
 
 
 def add_prop_item(df,item):
@@ -34,7 +37,10 @@ def calc_weighted_mean(df,col,w_col):
 
 
 
-agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef.csv'
+
+
+
+agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef_LAD.csv'
 
 
 df_raw=pd.read_csv(agrecalc_path)
@@ -49,6 +55,10 @@ years=list(set(df_beef['Year End'])) #unique beef animal types
 
 manure_cols=['Pasture (%)', 'Hill ground (%)', 'Liquid Slurry (%)', 'Solid storage (FYM) (%)','Pit storage (Slats) (%)','Deep bedding (retained > 1yr) (%)', 'Anaerobic digestion (%)']
 housed_manure_cols=['Liquid Slurry (%)', 'Solid storage (FYM) (%)','Pit storage (Slats) (%)', 'Deep bedding (retained > 1yr) (%)', 'Anaerobic digestion (%)']
+
+
+#add in LAD codes to AgreCalc data
+
 
 
 
@@ -96,7 +106,9 @@ if __name__ == '__main__':
     df_out=df_out[sorted(df_out.columns)] # arrange alphabeticaly
     df_out.to_csv(save_dir+'housing_means_AC.csv')
     '''
-    #Now we do it over years to make plots
+    
+    '''
+    #In time plots
     fig,axs=plt.subplots(nrows=int(np.ceil(len(beef_types)/2)),ncols=2, figsize=(1 * len(beef_types), 9), constrained_layout=True)
     axs=axs.flatten() #an axs for each beef type
     
@@ -128,6 +140,11 @@ if __name__ == '__main__':
             axs[i].legend()
        
     fig.savefig(save_dir+'hosuing_means_time_AC.png',dpi=300) 
+    '''
+    
+    #Spatial plots.
+    
+    
         
     
     
