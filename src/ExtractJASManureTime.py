@@ -32,8 +32,8 @@ if __name__ == "__main__":
     df_beef_clean=df_beef[df_beef[[m[0] for m in manure_time_items]].le(36).all(axis=1)]
     print("Removed {} farms since they sayed they stored some manure for more than 36 months".format(filt1len-len(df_beef_clean)))
     
-    
-
+    total_farms=len(df_beef_clean)
+    total_animals=df_beef_clean[[b[0] for b in beef_items]].sum().sum() #total animals considered
     out={} #to save means and stds for each type in manure_time_items
     fig,axs=plt.subplots(int(np.ceil(len(manure_time_items)/2)),2)
     axs=axs.flatten()
@@ -50,13 +50,13 @@ if __name__ == "__main__":
         n_farms=len(df_for_calc_prop)
         #calcualte how many cows included in calculation
         n_cattle=df_for_calc_prop.apply(lambda row: row[[b[0] for b in beef_items]].sum(),axis=1).sum()
-        out[m[1]]={'mean':weighted_mean,'std':weighted_std,'n-farm':n_farms,'n-cattle':n_cattle} #save out the mean,std
+        out[m[1]]={'mean':weighted_mean,'std':weighted_std,'n-farm':n_farms,'farm_percent':n_farms/total_farms*100,'n-cattle':n_cattle,'cattle_percent':n_cattle/total_animals*100} #save out the mean,std
         #histogram
         axs[i].hist(df_for_calc_prop[m[0]],weights=df_for_calc_prop['beef_prop'],density=True,bins=50)
         axs[i].set_xlabel('Storage time (months))',fontsize=7)
         axs[i].set_ylabel('Probability',fontsize=7)
         axs[i].tick_params(axis='both', labelsize=7)
-        wrapped_title = textwrap.fill(m[1]+', nfarms={}'.format(n_farms), width=70)
+        wrapped_title = textwrap.fill(m[1]+', n-holdings={}'.format(n_farms), width=70)
         axs[i].set_title(wrapped_title,fontsize=5)
         i+=1
         
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         counter+=1
     #join this data onto map_df    
     out={} #to save means and stds for each type in manure_time_items
-    fig,axs=plt.subplots(nrows=int(np.ceil(len(manure_time_items)/2)),ncols=2, figsize=(1 * len(manure_time_items), 9), constrained_layout=True)
+    fig,axs=plt.subplots(ncols=int(np.ceil(len(manure_time_items)/2)),nrows=2, figsize=(9,1 * len(manure_time_items)), constrained_layout=True)
     axs=axs.flatten()
     #I want to get a global vmax and min so extrac data first
     all_values=[]
