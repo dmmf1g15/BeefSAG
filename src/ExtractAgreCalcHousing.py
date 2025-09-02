@@ -16,7 +16,8 @@ from pandas.errors import SettingWithCopyWarning
 warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
 
-from ExtractJASManureHandlingData import map_df #for mapping
+from ExtractJASManureHandlingData import map_df,nuts_df,itl_scot #for mapping
+
 import textwrap
 
 def add_prop_item(df,item):
@@ -54,13 +55,13 @@ beef_types=sorted(beef_types)
 
 years=list(set(df_beef['Year End'])) #unique beef animal types
 LADS= list(set(df_beef['LAD_CODE'])) #unique local authroury district codes 
-
+NUTS2=list(set(df_beef['NUTS2']))
+NUTS2=[n for n in NUTS2 if n in itl_scot] #filter down to scotland.
 
 manure_cols=['Pasture (%)', 'Hill ground (%)', 'Liquid Slurry (%)', 'Solid storage (FYM) (%)','Pit storage (Slats) (%)','Deep bedding (retained > 1yr) (%)', 'Anaerobic digestion (%)']
 housed_manure_cols=['Liquid Slurry (%)', 'Solid storage (FYM) (%)','Pit storage (Slats) (%)', 'Deep bedding (retained > 1yr) (%)', 'Anaerobic digestion (%)']
 
 
-#add in LAD codes to AgreCalc data
 
 
 
@@ -71,6 +72,12 @@ if __name__ == '__main__':
     df_beef['Housed (%)']=df_beef[housed_manure_cols].sum(axis=1) #summing all manure to get housed (%)
     
     housing_cols=['Housed (%)','Pasture (%)', 'Hill ground (%)']
+    
+    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
+    
+    geoplotting={'nuts':{'shapes':NUTS2,'col':'NUTS2','df':nuts_df,'map_col':'ITL225CD'},
+                 'LAD':{'shapes':LADS,'col':'LAD_CODE','df':map_df,'map_col':'LAD22CD'}
+                        } #to format plotting below
     
     farm_years1=len(list(set(df_beef['Report ID'])))
     print('Started with {} many farm years'.format(farm_years1))
@@ -126,7 +133,7 @@ if __name__ == '__main__':
     
     
     
-    '''
+    
     #In time plots
     fig,axs=plt.subplots(nrows=int(np.ceil(len(beef_types)/2)),ncols=2, figsize=(1 * len(beef_types), 9), constrained_layout=True)
     axs=axs.flatten() #an axs for each beef type
@@ -155,23 +162,31 @@ if __name__ == '__main__':
         
         axs[i].set_title(bt)
         #makke legend
-        if i==0:
-            axs[i].legend()
-       
-    fig.savefig(save_dir+'hosuing_means_time_AC.png',dpi=300) 
+        #if i==0:
+            #[i].legend()
+    legend_ax = fig.add_axes([0.9, 0.1, 0.1, 0.8])  # [left, bottom, width, height]
+    legend_ax.axis('off')  # hide the axes
+    fig.legend(
+        handles=[plt.Line2D([0], [0], color=housing_colors[i], label=h) for i, h in enumerate(housing_cols)],
+        loc='upper center',   # position on the figure
+        ncol=len(housing_cols),#len(housing_cols),
+        frameon=False,
+        bbox_to_anchor=(0.5, 1.05))
+    #fig.subplots_adjust(bottom=0.01)
+    fig.savefig(save_dir+'hosuing_means_time_AC2.png',bbox_inches='tight',dpi=300) 
+    
+    
     '''
-    
-    
     #Spatial plots. Will only do housing % 
     
     ##First extract means for each region and beef type
-    df_beef_geo=df_beef_clean[~df_beef_clean['LAD_CODE'].isna()] #drop the rows with no lads code
+    df_beef_geo=df_beef_clean[~df_beef_clean[geoplotting[plotting]['col']].isna()] #drop the rows with no lads code
     rows3=len(df_beef_geo)
     farm_years3=len(list(set(df_beef_geo['Report ID'])))
     print('Dropped {} farm-years since there was no valid postcode'.format(farm_years2-farm_years3))
     out_housed_region={} #{LAD:{bt:{housed:housed...,n_cattle:}}}
-    for counter,LAD in enumerate(LADS):
-        df_lad=df_beef_geo[df_beef_geo['LAD_CODE']==LAD]
+    for counter,LAD in enumerate(geoplotting[plotting]['shapes']):
+        df_lad=df_beef_geo[df_beef_geo[geoplotting[plotting]['col']]==LAD]
         inner_dict={}
         for bt in beef_types:
             df_lad_bt=add_prop_item(df_lad,bt)# add in proportions. Shortens df down to only the bt rows
@@ -190,11 +205,15 @@ if __name__ == '__main__':
     
     #To normalise color map 0-100
     norm = Normalize(vmin=0, vmax=100)
+    
+    gdf=geoplotting[plotting]['df'] #pick it out for ease of syntax
     for i,bt in enumerate(beef_types):
         mapper_dict={k:v[bt][key_to_plot] for k,v in out_housed_region.items()} #to join
-        map_df[bt+'_mean']=map_df['LAD22CD'].map(mapper_dict)
         
-        gdf_plot=map_df.plot(column=map_df[bt + '_mean'], cmap=cmap,ax=axs[i],norm=None, legend=True,missing_kwds={'color': 'lightgrey'})
+  
+        gdf[bt+'_mean']=gdf[geoplotting[plotting]['map_col']].map(mapper_dict)
+        #gdf=gdf.dropna(subset=[bt+'_mean'])
+        gdf_plot=gdf.plot(column=bt + '_mean', cmap=cmap,ax=axs[i],norm=None, legend=True,missing_kwds={'color': 'lightgrey'})
         #axs[i].set_aspect('auto')
         axs[i].axis('off')
         wrapped_title = textwrap.fill(bt, width=40)
@@ -205,7 +224,8 @@ if __name__ == '__main__':
     #plt.show()
     axs[-1].axis('off')
     axs[-2].axis('off')
-    fig.savefig(save_dir+key_to_plot+'_spatial.png',dpi=300)
+    fig.savefig(save_dir+key_to_plot+'{}_spatial.png'.format(geoplotting[plotting]['col']),dpi=300)
+    '''
     
         
     

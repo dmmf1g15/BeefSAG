@@ -1,5 +1,5 @@
 '''
-Code to process JAS2023 and pick out manure management percentages for beef
+Code to process JAS2023 and pick out manure management percentages of solid vs liquid for beef
 '''
 
 import pandas as pd
@@ -47,7 +47,7 @@ manure_storage_items=[('item5115', 'Manure solid storage in heaps %'),
                         ('item5117', 'Manure stored in pits below animal confinement %'),
                         ('item5118', 'Manure stored in deep litter systems %'),
                         ('item5119', 'Liquid manure/slurry storage without cover %'),
-                        ('item5120', 'Liquid manure/slurry storage with permeable cover %'),
+                        ('item5120', 'Liquid manure/slurry storage without cover %'),
                         ('item5121', 'Liquid manure/slurry storage with impermeable cover %'),
                         ('item5122', 'Manure stored in other facilities (not elsewhere classified) %'),
                         ('item5123', 'Daily spread %'),
@@ -67,8 +67,16 @@ manure_time_items=[('item5124', 'Manure stored in compost piles (months)'),
                         ]
 
 JAC_path='D:\\JAS\\jas2holdings2023\\jas2holdings2023.dta'
+nuts_path=r'D:\SOURCED-DATA\NUTS\ITL2_JAN_2025_UK_BFC\ITL2_JAN_2025_UK_BFC.shp'
 map_path='D:\\SOURCED-DATA\\Admin-Regions\\Local_Authority_Districts_(December_2022)_Boundaries_UK_BFC\\Local_Authority_Districts_(December_2022)_Boundaries_UK_BFC\\LAD_DEC_2022_UK_BFC.shp'
 map_df=gpd.read_file(map_path)
+itl_scot=['TLM0','TLM1','TLM2','TLM3', 'TLM5', 'TLM9'] #list of itl_codes level 2 2025 that are in scotland.
+nuts_df=gpd.read_file(nuts_path) #not really nuts but itl2
+nuts_df=nuts_df[nuts_df['ITL225CD'].isin(itl_scot)] #filter to scotland
+
+
+
+
 converter_path='C:\\Users\\dfletcher\\Documents\\BeefSAG\\ParishGeographyLookups.xlsx'
 converter_df=pd.read_excel(converter_path)
 df=pd.read_stata(JAC_path)
