@@ -6,7 +6,7 @@
 
 output/
 writeups/
-
+src/test.csv
 
 # Node artifact files
 node_modules/

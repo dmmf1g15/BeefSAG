@@ -11,7 +11,7 @@ import warnings
 from pandas.errors import SettingWithCopyWarning
 
 warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
-
+import textwrap
 
 def add_proprtion_of_items(df,list_of_cols,prefix=''):
     #will work out what proportion of col that row has and 
@@ -77,16 +77,30 @@ nuts_df=nuts_df[nuts_df['ITL225CD'].isin(itl_scot)] #filter to scotland
 
 
 
-converter_path='C:\\Users\\dfletcher\\Documents\\BeefSAG\\ParishGeographyLookups.xlsx'
+converter_path=r'D:\SOURCED-DATA\NUTS\ParishGeographyLookups.xlsx'
 converter_df=pd.read_excel(converter_path)
 df=pd.read_stata(JAC_path)
 df['LAD22CD']=df.apply(lambda row: parish_to_LAD22CODE(row['parish'],converter_df),axis=1) #add in a new column for mapping
 LADS=list(set(df['LAD22CD']))
 map_df=map_df[map_df['LAD22CD'].isin(LADS)] #filter to scotlandd
+
+###WORK FROM HERE. USE BELOW TO CONVERT JAC to ITL2. Note use the LAD output above as input LAD -> ITLS map in the cav below.
+nuts_converter_path=r'D:\SOURCED-DATA\NUTS\LAD_(December_2024)_to_LAU1_to_ITL3_to_ITL2_to_ITL1_(January_2025)_Lookup_in_the_UK.csv'
+
+
+
 if __name__=="__main__":
     beef_farm_cutoff=10# how many beef cows required to be called a beef farm
     save_dir='../output/ManureHandlingSystem/'
     
+    '''
+    #Switches for plotting if needed
+    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
+    
+    geoplotting={'nuts':{'shapes':NUTS2,'col':'NUTS2','df':nuts_df,'map_col':'ITL225CD'},
+                 'LAD':{'shapes':LADS,'col':'LAD_CODE','df':map_df,'map_col':'LAD22CD'}
+                        } #to format plotting below
+    '''
     
     df_beef_cols=df[[b[0] for b in beef_items]] #only beef item cols
     df_beef=df[df_beef_cols.sum(axis=1)>beef_farm_cutoff] #only include farms which have more than x  beef cows in total.
@@ -120,7 +134,9 @@ if __name__=="__main__":
     df_solid_liquid['solid_percent']=df_solid_liquid.apply(lambda row: np.nansum(row[solid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1) #to make sure it adds to 100%
     df_solid_liquid['liquid_percent']=df_solid_liquid.apply(lambda row: np.nansum(row[liquid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1)
     
-    
+    fig,axs=plt.subplots(nrows=2,ncols=2,figsize=(10, 10))
+    axs=axs.flatten()
+    i=0
     for k,v in beef_groups.items():
         #add in proportion of beef cows owned so we can do weighted averages
         df_solid_liquid=add_proprtion_of_items(df_solid_liquid, v,prefix=k)
@@ -136,38 +152,29 @@ if __name__=="__main__":
         solid_sd=np.sqrt(df_solid_liquid.apply(lambda row: (row['solid_percent']-solid_tot)**2*row[k+'_prop'],axis=1).sum())
         solid_sds[k]=solid_sd
         
-        #make histograms old 
-        solid_farm=np.zeros(len(df_solid_liquid))
-        weights=np.zeros(len(df_solid_liquid))
-        liquid_farm=np.zeros(len(df_solid_liquid))
-        i=0
-        for _,row in df_solid_liquid.iterrows():#
-            units=int(np.nansum(row[v]))
-            weights[i]=units
-            solid_percent=row['solid_percent']
-            liquid_percent=row['liquid_percent']
-            tot_percent=solid_percent+liquid_percent
-            
-            solid_farm[i]=solid_percent
-            liquid_farm[i]=liquid_percent #append n copies  to the list where n is the number of the cow type
-            i+=1    
         
+        n_farm_years=len(df_solid_liquid)
         
-        
-        plt.hist(list(liquid_farm),weights=weights/np.sum,bins=50,density=True)
-        plt.title(k + '_Liquid')
-        plt.xlabel('Proportion of manure stored as liquid per cattle')
-        plt.ylabel('Probability')
-        plt.savefig(save_dir+'LiquidSystemHistogram_{}.png'.format(k.replace('<','lt').replace('>','gt')),dpi=200)
-        plt.close()
-        
-        counts, bins, _,=plt.hist(list(solid_farm),weights=weights,bins=50,density=True)
-        plt.title(k+'_Solid')
-        plt.xlabel('Proportion of manure stored as solid per cattle')
-        plt.ylabel('Probability')
-        plt.savefig(save_dir+'SolidSystemHistogram_{}.png'.format(k.replace('<','lt').replace('>','gt')),dpi=200)
-        plt.close()
+        axs[i].hist(df_solid_liquid['liquid_percent'],weights=df_solid_liquid[k+'_prop'],bins=100,density=True)
+        axs[i].set_xlabel('Proportion of Manure',fontsize=9)
+        axs[i].set_ylabel('Probability',fontsize=9)
+        axs[i].tick_params(axis='both', labelsize=9)
+        wrapped_title = textwrap.fill(k+' liquid_percent'+', n-enterprise={}'.format(n_farm_years), width=70)
+        axs[i].set_title(wrapped_title,fontsize=9)
     
+        axs[i+1].hist(df_solid_liquid['solid_percent'],weights=df_solid_liquid[k+'_prop'],bins=100,density=True)
+        axs[i+1].set_xlabel('Proportion of Manure',fontsize=9)
+        axs[i+1].set_ylabel('Probability',fontsize=9)
+        axs[i+1].tick_params(axis='both', labelsize=9)
+        wrapped_title = textwrap.fill(k+' solid_percent'+', n-enterprise={}'.format(n_farm_years), width=70)
+        axs[i+1].set_title(wrapped_title,fontsize=9)
+        
+        i=i+2
+        
+    
+        
+    plt.savefig(save_dir+ 'histogram.png')    
+
     
     '''
     #Calculate for each regions

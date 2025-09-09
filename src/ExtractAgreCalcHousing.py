@@ -24,13 +24,33 @@ def add_prop_item(df,item):
     #To add in the poroprtion of the number of that item is in a given row over the full df
     #will make a new column with item_prop. The data frame returned will only have rows 
     #with that item type 
-          
-    df_item=df[df['Enterprise Sector Item']==item] #crop down to right items.
-    total_items=df_item['Average number over 12 Months'].sum(axis=0)
-    df_item[item+'_prop']=df_item['Average number over 12 Months']/total_items
-    return df_item
-
-
+    reports=list(set(df['Report ID']))
+    if type(item)!=list: # if item is not a list just do the one column:
+        df_item = df.loc[df["Enterprise Sector Item"] == item].copy()
+    
+        # Keep only one row per Report ID (if duplicates, keep first)
+        df_item = df_item.drop_duplicates(subset="Report ID")
+    
+        # Compute the denominator (total across all reports)
+        total = df_item["Average number over 12 Months"].sum()
+    
+        # Add proportion column
+        df_item[item + "_prop"] = df_item["Average number over 12 Months"] / total
+        return df_item
+    
+    else: #its a list that need to be summed to get all animals in the list
+        # Filter to only the items we care about
+        df_items = df.loc[df["Enterprise Sector Item"].isin(item)].copy()
+    
+        # Deduplicate by Report ID per item
+        df_items = df_items.drop_duplicates(subset=["Enterprise Sector Item", "Report ID"])
+        total = df_items["Average number over 12 Months"].sum()
+        # Compute proportions relative to this grand total
+        df_items["prop"] = df_items["Average number over 12 Months"] / total
+    
+        return df_items             
+ 
+            
 def calc_weighted_mean(df,col,w_col):
     #to calculate weighted mean using two cols
     mean=df.apply(lambda row: row[col]*row[w_col],axis=1).sum()
@@ -54,6 +74,7 @@ beef_types=sorted(beef_types)
 
 
 years=list(set(df_beef['Year End'])) #unique beef animal types
+years=[int(y) for y in years]
 LADS= list(set(df_beef['LAD_CODE'])) #unique local authroury district codes 
 NUTS2=list(set(df_beef['NUTS2']))
 NUTS2=[n for n in NUTS2 if n in itl_scot] #filter down to scotland.
@@ -133,9 +154,9 @@ if __name__ == '__main__':
     
     
     
-    
+    '''
     #In time plots
-    fig,axs=plt.subplots(nrows=int(np.ceil(len(beef_types)/2)),ncols=2, figsize=(1 * len(beef_types), 9), constrained_layout=True)
+    fig,axs=plt.subplots(nrows=5,ncols=int(np.ceil(len(beef_types)/5)), figsize=(9, 10), constrained_layout=True)
     axs=axs.flatten() #an axs for each beef type
     
     housing_colors=['#1f77b4','#ff7f0e','#2ca02c']
@@ -159,6 +180,8 @@ if __name__ == '__main__':
         for j,h in enumerate(housing_cols):
             axs[i].errorbar(years,inner_dict[h]['mean'],yerr=inner_dict[h]['std'],color=housing_colors[j],label=h,capsize=6)
             axs[i].set_ylabel('%')
+            axs[i].tick_params(axis='x',labelsize=9)
+            axs[i].set_xticks([int(years[0]), int(years[-1])])
         
         axs[i].set_title(bt)
         #makke legend
@@ -171,12 +194,12 @@ if __name__ == '__main__':
         loc='upper center',   # position on the figure
         ncol=len(housing_cols),#len(housing_cols),
         frameon=False,
-        bbox_to_anchor=(0.5, 1.05))
+        bbox_to_anchor=(0.5, 1.04))
     #fig.subplots_adjust(bottom=0.01)
     fig.savefig(save_dir+'hosuing_means_time_AC2.png',bbox_inches='tight',dpi=300) 
-    
-    
     '''
+    
+    
     #Spatial plots. Will only do housing % 
     
     ##First extract means for each region and beef type
@@ -199,7 +222,7 @@ if __name__ == '__main__':
     
     #Join dcitionary onto df and plot
     key_to_plot='Housed (%)_mean'
-    fig,axs=plt.subplots(nrows=int(np.ceil(len(beef_types)/3)),ncols=3, figsize=(1* len(beef_types), 10), constrained_layout=True)
+    fig,axs=plt.subplots(nrows=4,ncols=3, figsize=(7, 10), constrained_layout=True)
     axs=axs.flatten() #an axs for each beef type
     cmap = 'viridis'
     
@@ -225,7 +248,7 @@ if __name__ == '__main__':
     axs[-1].axis('off')
     axs[-2].axis('off')
     fig.savefig(save_dir+key_to_plot+'{}_spatial.png'.format(geoplotting[plotting]['col']),dpi=300)
-    '''
+    
     
         
     
