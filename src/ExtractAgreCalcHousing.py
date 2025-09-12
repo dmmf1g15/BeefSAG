@@ -201,7 +201,7 @@ if __name__ == '__main__':
     
     
     #Spatial plots. Will only do housing % 
-    
+    '''
     ##First extract means for each region and beef type
     df_beef_geo=df_beef_clean[~df_beef_clean[geoplotting[plotting]['col']].isna()] #drop the rows with no lads code
     rows3=len(df_beef_geo)
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     axs[-1].axis('off')
     axs[-2].axis('off')
     fig.savefig(save_dir+key_to_plot+'{}_spatial.png'.format(geoplotting[plotting]['col']),dpi=300)
-    
+    '''
     
         
     

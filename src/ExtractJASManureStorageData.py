@@ -13,9 +13,11 @@ import warnings
 from pandas.errors import SettingWithCopyWarning
 warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
-from ExtractJASManureHandlingData import  beef_items, manure_storage_items, solid_manure_items, liquid_manure_items, df, map_df, converter_df, add_proprtion_of_items,LADS
+from ExtractJASManureHandlingData import  beef_items, manure_storage_items, solid_manure_items, liquid_manure_items, df, map_df, converter_df, add_proprtion_of_items,calc_weighted_mean,LADS
 import textwrap
 from copy import deepcopy
+
+
 
 manure_storage_items_dict={m[0]:m[1] for m in manure_storage_items} #for easier use.
 
@@ -52,57 +54,54 @@ if __name__=="__main__":
     #Add in total beef_numbers to each row
     df_beef_clean['beef_numbers']=df_beef_clean[[x[0] for x in beef_items]].sum(axis=1)
     
-    #add in percent of manure which is solid/liquid so we can weigth the averages with this.
-    df_beef_clean['solid_percent']=df_beef_clean.apply(lambda row: np.nansum(row[solid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1) #to make sure it adds to 100%
-    df_beef_clean['liquid_percent']=df_beef_clean.apply(lambda row: np.nansum(row[liquid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1)
-    
  
     #Normalise solid/liquid types so that all the solids sum to 100 and all the liquids sum to 100 with new columns
     df_beef_clean['solid_total']=df_beef_clean[solid_manure_items].sum(axis=1)
     for m in solid_manure_items:
-        df_beef_clean[m+'_normed']=nan_divide(df_beef_clean[m],df_beef_clean['solid_total']) #makes sure to return nan if denom is 0  
+        df_beef_clean[m+'_normed']=df_beef_clean[m]/df_beef_clean['solid_total'] 
+        
     df_beef_clean['liquid_total']=df_beef_clean[liquid_manure_items].sum(axis=1)
     for m in liquid_manure_items:
-        df_beef_clean[m+'_normed']=nan_divide(df_beef_clean[m],df_beef_clean['liquid_total'])
+        df_beef_clean[m+'_normed']=df_beef_clean[m]/df_beef_clean['liquid_total']
     
     
-    '''
-    #First we analyse the whole country starting with solid. 
+    
+    #First we analyse the whole country starting with solid.
+    #We need to only include farms which hace some solid
+    df_solid=df_beef_clean[df_beef_clean['solid_total']>0].copy()
+    df_solid=add_proprtion_of_items(df_solid, [b[0] for b in beef_items],prefix='beef')
     out_solid={} 
+    n_farms=len(df_solid)
+    #calcualte how many cows included in calculation
+    n_cattle=df_solid.apply(lambda row: row[[b[0] for b in beef_items]].sum(),axis=1).sum()
     for m in solid_manure_items:
-        df_for_calc=df_beef_clean[~df_beef_clean[m+'_normed'].isna()] #remove nans in this manure type. 
-        #df_for_calc=deepcopy(df_beef_clean)
-        df_for_calc_prop=add_proprtion_of_items(df_for_calc, [b[0] for b in beef_items],prefix='beef')
-        #We need to make sure each solid 
-        
-        weighted_mean=df_for_calc_prop.apply(lambda row: row[m+'_normed']*row['beef_prop'],axis=1).sum() #this assumes all animals produce the same amount of managed manure.
-        weighted_std=np.sqrt(df_for_calc_prop.apply(lambda row: (row[m+'_normed']-weighted_mean)**2*row['beef_prop'],axis=1).sum())
-        n_farms=len(df_for_calc_prop)
-        #calcualte how many cows included in calculation
-        n_cattle=df_for_calc_prop.apply(lambda row: row[[b[0] for b in beef_items]].sum(),axis=1).sum()
+        weighted_mean,weighted_std=calc_weighted_mean(df_solid,m+'_normed','beef_prop')
+
         out_solid[manure_storage_items_dict[m]]={'mean':weighted_mean,'std':weighted_std,'n-farm':n_farms,'n-cattle':n_cattle}
         
     #save out csv    
     df_out_solid=pd.DataFrame.from_dict(out_solid)
     df_out_solid.to_csv(save_dir+'solid_manure_means.csv')    
+    
     #now liquid
+    df_liquid=df_beef_clean[df_beef_clean['liquid_total']>0].copy()
+    df_liquid=add_proprtion_of_items(df_liquid, [b[0] for b in beef_items],prefix='beef')
+    n_farms=len(df_liquid)
+    n_cattle=df_liquid.apply(lambda row: row[[b[0] for b in beef_items]].sum(),axis=1).sum()
     out_liquid={} 
     for m in liquid_manure_items:
-        df_for_calc=df_beef_clean[~df_beef_clean[m+'_normed'].isna()] #remove nans in this manure type. 
-        #df_for_calc=deepcopy(df_beef_clean)
-        df_for_calc_prop=add_proprtion_of_items(df_for_calc, [b[0] for b in beef_items],prefix='beef')
-        #We need to make sure each solid 
+        weighted_mean,weighted_std=calc_weighted_mean(df_liquid,m+'_normed','beef_prop')
         
-        weighted_mean=df_for_calc_prop.apply(lambda row: row[m+'_normed']*row['beef_prop'],axis=1).sum() #this assumes all animals produce the same amount of managed manure.
-        weighted_std=np.sqrt(df_for_calc_prop.apply(lambda row: (row[m+'_normed']-weighted_mean)**2*row['beef_prop'],axis=1).sum())
-        n_farms=len(df_for_calc_prop)
-        #calcualte how many cows included in calculation
-        n_cattle=df_for_calc_prop.apply(lambda row: row[[b[0] for b in beef_items]].sum(),axis=1).sum()
+       
+        #weighted_mean,weighted_std=calc_weighted_mean(df_liquid, m+'_normed','beef_prop')
         out_liquid[manure_storage_items_dict[m]]={'mean':weighted_mean,'std':weighted_std,'n-farm':n_farms,'n-cattle':n_cattle}
     
     df_out_liquid=pd.DataFrame.from_dict(out_liquid)
     df_out_liquid.to_csv(save_dir+'liquid_manure_means.csv')    
-    '''
+    
+    
+    
+    
     
     '''
     ##Spatial analysi for solid
@@ -165,13 +164,13 @@ if __name__=="__main__":
     sm._A = []
     #cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     cbar = fig.colorbar(sm, ax=axs)
-    cbar.set_label('Average Storage time (months)', fontsize=10)
+    cbar.set_label('% liquid manure stored as titled type', fontsize=10)
     
     #plt.tight_layout()
     #plt.subplots_adjust(wspace=0, right=0.9)  # wspace controls space between plots
     plt.savefig(save_dir+'solid_manure_regional.png',dpi=300)      
-    ''' 
-    
+    '''
+    '''
     #Spatial analysis for liquid.
     out_liquid_region={} #{LAD:{manure_group:percenatge}}
     counter=0
@@ -232,12 +231,12 @@ if __name__=="__main__":
     sm._A = []
     #cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     cbar = fig.colorbar(sm, ax=axs)
-    cbar.set_label('Average Storage time (months)', fontsize=10)
+    cbar.set_label('% liquid manure stored as titled type', fontsize=10)
     
     #plt.tight_layout()
     #plt.subplots_adjust(wspace=0, right=0.9)  # wspace controls space between plots
     plt.savefig(save_dir+'liquid_manure_regional.png',dpi=300)       
-        
+    '''    
         
         
   
