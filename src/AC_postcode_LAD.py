@@ -24,11 +24,11 @@ def post_code_to_LAD(post_code):
 
 
 
-agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef.csv'
-out_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef_LAD.csv'
+agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20251014-SAGBeef.csv'
+out_path='D:\\AgreCalc\\BeefSAG_2025\\20251014-SAGBeef_LAD.csv'
 
 
-'''
+
 df=pd.read_csv(agrecalc_path)
 
 
@@ -58,4 +58,3 @@ df['LAD_CODE']=df['Post Code'].map(pc_lad_dict)
 df['NUTS2']=df['Post Code'].map(pc_nuts2_dict)
 
 df.to_csv(out_path)
-'''

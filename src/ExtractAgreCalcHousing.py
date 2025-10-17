@@ -53,8 +53,9 @@ def add_prop_item(df,item):
             
 def calc_weighted_mean(df,col,w_col):
     #to calculate weighted mean using two cols
-    mean=df.apply(lambda row: row[col]*row[w_col],axis=1).sum()
-    std=np.sqrt(df.apply(lambda row: (row[col]-mean)**2*row[w_col],axis=1).sum())
+    tot=df[w_col].sum()
+    mean=df.apply(lambda row: row[col]*row[w_col]/tot,axis=1).sum()
+    std=np.sqrt(df.apply(lambda row: (row[col]-mean)**2*row[w_col]/tot,axis=1).sum())
     return mean,std
 
 
