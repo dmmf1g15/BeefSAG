@@ -1,0 +1,422 @@
+all_crops=['Additives',
+ 'Ammonia Treated Straw (Barley)',
+ 'Arable Silage',
+ 'Arable silage - Silage_hg',
+ 'Barley (grain)',
+ 'Barley (grain) commerical urea treatment',
+ 'Barley (grain) urea treated',
+ 'Barley (moist)',
+ 'Beef nuts (16% protein)',
+ 'Big Bale Silage',
+ 'Biscuit meal',
+ 'Bread meal',
+ 'Bread milling winter wheat - Grain_hg',
+ 'Bread milling winter wheat - Straw_hg',
+ 'Brussel sprouts - Brassica_hg',
+ 'Cabbages - Brassica_hg',
+ 'Calcium carbonate',
+ 'Carrots',
+ 'Carrots - Carrots_hg',
+ 'Citrus pellets',
+ 'Cold Pressed Rapeseed Treated (Neolac)',
+ 'Confectionery by-product',
+ 'Crimped Barley',
+ 'Dairy Heifer rearing Nuts',
+ 'Dairy and calf nuts (12.5 ME, 16% protein)',
+ 'Dairy and calf nuts (13ME,18% protein)',
+ 'Dark grains - barley',
+ 'Dark grains - maize',
+ 'Dark grains - wheat',
+ 'Draff / brewers grains (23% DM)',
+ 'Dried Grass',
+ 'Dried Lucerne ',
+ 'Early potatoes - Potatoes_hg',
+ 'Ewe nuts (12.5 ME, 18% protein)',
+ 'Expelled Rapseed meal (Neopro)',
+ 'Feed spring wheat - Grain_hg',
+ 'Feed spring wheat - Straw_hg',
+ 'Feed wheat (all) - Grain_hg',
+ 'Feed wheat (all) - Straw_hg',
+ 'Feed winter barley - Grain_hg',
+ 'Feed winter barley - Straw_hg',
+ 'Feed winter wheat - Grain_hg',
+ 'Feed winter wheat - Straw_hg',
+ 'Field beans',
+ 'Field beans (all) - Pulse_hg',
+ 'Field beans (all) - Straw_hg',
+ 'Fishmeal',
+ 'Fodder beet (bulb)',
+ 'Forage maize - Silage_hg',
+ 'Grass silage - average',
+ 'Grass silage - good',
+ 'Grass silage - poor',
+ 'Hay',
+ 'Hay & graze - Hay_hg',
+ 'Lamb Finisher nuts (12.5 ME, 15% protein)',
+ 'Limestone flour',
+ 'Lo Pro Soyabean meal (40%)',
+ 'Lysine',
+ 'Magnesium chloride',
+ 'Maincrop processing potatoes - Potatoes_hg',
+ 'Maincrop ware potatoes - Potatoes_hg',
+ 'Maize (grain)',
+ 'Maize gluten Prairie meal (60% protein)',
+ 'Maize gluten feed (20% protein) ',
+ 'Maize silage',
+ 'Malting spring barley (all) - Grain_hg',
+ 'Malting spring barley (all) - Straw_hg',
+ 'Malting winter barley - Grain_hg',
+ 'Malting winter barley - Straw_hg',
+ 'Methionine',
+ 'Milk powder',
+ 'Milling wheat (all) - Grain_hg',
+ 'Milling wheat (all) - Straw_hg',
+ 'Minerals and Vitamins',
+ 'Minor cereals - Grain_hg',
+ 'Minor cereals - Straw_hg',
+ 'Molasses - beet',
+ 'Molasses - cane',
+ 'Monocalcium phosphate',
+ 'Oats (grain)',
+ 'Oilseed rape (all) - Oilseed_hg',
+ 'Oilseed rape (all) - Straw_hg',
+ 'Other beef blends ',
+ 'Other brassica veg - Brassica_hg',
+ 'Other dairy blends (13.5ME, 20% protein)',
+ 'Other dairy blends (22% protein)',
+ 'Palm Kernel expeller',
+ 'Peas',
+ 'Pot ale syrup',
+ 'Potatoes (brock)',
+ 'Potatoes (ware)',
+ 'Pre-mix',
+ 'Protected palm oil',
+ 'Rape Meal',
+ 'Rape Meal - expeller',
+ 'Rapeseed - full fat',
+ 'Red clover - Silage_hg',
+ 'Red clover silage',
+ 'Salt',
+ 'Seaweed Meal',
+ 'Seed potatoes - Potatoes_hg',
+ 'Silage & graze - Silage_hg',
+ 'Soft milling winter wheat - Straw_hg',
+ 'Soya Bean oil',
+ 'Soya hulls',
+ 'Soyabean Full Fat',
+ 'Soyabean meal Hipro (Any origin 46%)',
+ 'Soyabean meal Hipro (Brazilian 48%)',
+ 'Spring brewing malting barley - Grain_hg',
+ 'Spring brewing malting barley - Straw_hg',
+ 'Spring distilling malting barley - Grain_hg',
+ 'Spring distilling malting barley - Straw_hg',
+ 'Spring feed barley - Grain_hg',
+ 'Spring feed barley - Straw_hg',
+ 'Spring field beans - Pulse_hg',
+ 'Spring oats - Grain_hg',
+ 'Spring oats - Straw_hg',
+ 'Spring peas - Pulse_hg',
+ 'Spring peas - Straw_hg',
+ 'Straw (barley)',
+ 'Straw (oats)',
+ 'Straw (wheat)',
+ 'Sugar beet pulp pellets',
+ 'Sugar beet roots',
+ 'Swedes',
+ 'Swedes / turnips - Swedes / turnips_hg',
+ 'Turnips (bulbs)',
+ 'Urea',
+ 'Vegetable protein concentrate',
+ 'Waste vegetables',
+ 'Wheat (grain)',
+ 'Wheat (grain) caustic soda',
+ 'Wheat (grain) commerical urea treatment',
+ 'Wheat (grain) urea',
+ 'Wheat feed pellets',
+ 'Wholecrop cereals - Silage_hg',
+ 'Wholecrop cereals - barley',
+ 'Wholecrop cereals - wheat',
+ 'Winter field beans - Pulse_hg',
+ 'Winter field beans - Straw_hg',
+ 'Winter oats  - Grain_hg',
+ 'Winter oats  - Straw_hg',
+ 'Winter oilseed rape - Oilseed_hg',
+ 'Winter oilseed rape - Straw_hg',
+ 'Winter rye - Grain_hg',
+ 'Winter rye - Straw_hg']
+
+crop_groups = {
+    "Concentrate": [
+        # Grains & cereals
+        "Barley (grain)", "Barley (grain) commerical urea treatment", "Barley (grain) urea treated",
+        "Barley (moist)", "Crimped Barley", "Feed winter barley - Grain_hg", "Feed spring wheat - Grain_hg",
+        "Feed winter wheat - Grain_hg", "Feed wheat (all) - Grain_hg", "Malting spring barley (all) - Grain_hg",
+        "Malting winter barley - Grain_hg", "Spring brewing malting barley - Grain_hg",
+        "Spring distilling malting barley - Grain_hg", "Spring feed barley - Grain_hg", "Oats (grain)",
+        "Wheat (grain)", "Wheat (grain) caustic soda", "Wheat (grain) commerical urea treatment",
+        "Wheat (grain) urea", "Maize (grain)", "Minor cereals - Grain_hg", "Winter rye - Grain_hg",
+        "Spring oats - Grain_hg", "Winter oats  - Grain_hg", "Milling wheat (all) - Grain_hg",
+        "Bread milling winter wheat - Grain_hg",
+        
+        # Compound feeds
+        "Beef nuts (16% protein)", "Dairy Heifer rearing Nuts", "Dairy and calf nuts (12.5 ME, 16% protein)",
+        "Dairy and calf nuts (13ME,18% protein)", "Ewe nuts (12.5 ME, 18% protein)",
+        "Lamb Finisher nuts (12.5 ME, 15% protein)", "Other beef blends ", "Other dairy blends (13.5ME, 20% protein)",
+        "Other dairy blends (22% protein)", "Wheat feed pellets", "Milk powder",
+        
+        # Protein meals & oilseeds
+        "Soyabean meal Hipro (Any origin 46%)", "Soyabean meal Hipro (Brazilian 48%)",
+        "Soyabean Full Fat", "Lo Pro Soyabean meal (40%)", "Rapeseed - full fat", "Rape Meal",
+        "Rape Meal - expeller", "Expelled Rapseed meal (Neopro)", "Cold Pressed Rapeseed Treated (Neolac)",
+        "Palm Kernel expeller", "Vegetable protein concentrate", "Fishmeal",
+        "Maize gluten feed (20% protein) ", "Maize gluten Prairie meal (60% protein)", "Soya hulls",
+        "Oilseed rape (all) - Oilseed_hg", "Winter oilseed rape - Oilseed_hg",
+        
+        # Pulses
+        "Field beans", "Field beans (all) - Pulse_hg", "Spring peas - Pulse_hg", "Winter field beans - Pulse_hg",
+        "Spring field beans - Pulse_hg", "Peas",
+        
+        # By-products & energy sources
+        "Dark grains - barley", "Dark grains - maize", "Dark grains - wheat", "Draff / brewers grains (23% DM)",
+        "Biscuit meal", "Bread meal", "Confectionery by-product", "Pot ale syrup",
+        "Molasses - beet", "Molasses - cane", "Citrus pellets", "Sugar beet pulp pellets"
+    ],
+    
+    "Silage": [
+        "Arable Silage", "Arable silage - Silage_hg", "Big Bale Silage",
+        "Silage & graze - Silage_hg", "Red clover silage", "Red clover - Silage_hg",
+        "Grass silage - average", "Grass silage - good", "Grass silage - poor"
+    ],
+    
+    "Maize Silage": [
+        "Maize silage","Forage maize - Silage_hg"
+    ],
+    
+    "Hay": [
+        "Hay", "Hay & graze - Hay_hg", "Dried Grass", "Dried Lucerne "
+    ],
+    
+    "Straw": [
+        "Ammonia Treated Straw (Barley)", "Straw (barley)", "Straw (oats)",
+        "Straw (wheat)", "Bread milling winter wheat - Straw_hg", "Feed spring wheat - Straw_hg",
+        "Feed wheat (all) - Straw_hg", "Feed winter barley - Straw_hg", "Feed winter wheat - Straw_hg",
+        "Field beans (all) - Straw_hg", "Malting spring barley (all) - Straw_hg", "Malting winter barley - Straw_hg",
+        "Spring brewing malting barley - Straw_hg", "Spring distilling malting barley - Straw_hg",
+        "Spring feed barley - Straw_hg", "Spring oats - Straw_hg", "Spring peas - Straw_hg",
+        "Winter field beans - Straw_hg", "Winter oats  - Straw_hg", "Winter rye - Straw_hg",
+        "Soft milling winter wheat - Straw_hg", "Minor cereals - Straw_hg", "Oilseed rape (all) - Straw_hg",
+        "Winter oilseed rape - Straw_hg",'Milling wheat (all) - Straw_hg'
+    ],
+    
+    "Whole Crop": [
+        "Wholecrop cereals - Silage_hg", "Wholecrop cereals - barley", "Wholecrop cereals - wheat"
+    ],
+    
+    "Forage roots": [
+        "Fodder beet (bulb)", "Sugar beet roots", "Swedes", "Swedes / turnips - Swedes / turnips_hg",
+        "Turnips (bulbs)", "Carrots", "Carrots - Carrots_hg", "Potatoes (ware)", "Potatoes (brock)",
+        "Early potatoes - Potatoes_hg", "Maincrop processing potatoes - Potatoes_hg",
+        "Maincrop ware potatoes - Potatoes_hg", "Seed potatoes - Potatoes_hg",
+        "Waste vegetables"
+    ],
+    
+    "Additives": [
+        "Additives", "Calcium carbonate", "Limestone flour", "Urea", "Lysine", "Methionine",
+        "Monocalcium phosphate", "Magnesium chloride", "Minerals and Vitamins", "Pre-mix", "Salt",
+        "Seaweed Meal", "Protected palm oil", "Soya Bean oil"
+    ],
+    
+    "Other": [
+        "Other brassica veg - Brassica_hg",
+        "Brussel sprouts - Brassica_hg",
+        "Cabbages - Brassica_hg"
+    ]
+}
+
+DM_yield={
+    'Additives': 1.0,
+    'Ammonia Treated Straw (Barley)': 0.90,
+    'Arable Silage': 0.25,
+    'Arable silage - Silage_hg': 0.25,
+    'Barley (grain)': 0.88,
+    'Barley (grain) commerical urea treatment': 0.88,
+    'Barley (grain) urea treated': 0.88,
+    'Barley (moist)': 0.85,
+    'Beef nuts (16% protein)': 0.90,
+    'Big Bale Silage': 0.25,
+    'Biscuit meal': 0.95,
+    'Bread meal': 0.95,
+    'Bread milling winter wheat - Grain_hg': 0.88,
+    'Bread milling winter wheat - Straw_hg': 0.85,
+    'Brussel sprouts - Brassica_hg': 0.12,
+    'Cabbages - Brassica_hg': 0.12,
+    'Calcium carbonate': 1.0,
+    'Carrots': 0.12,
+    'Carrots - Carrots_hg': 0.12,
+    'Citrus pellets': 0.90,
+    'Cold Pressed Rapeseed Treated (Neolac)': 0.90,
+    'Confectionery by-product': 0.90,
+    'Crimped Barley': 0.85,
+    'Dairy Heifer rearing Nuts': 0.90,
+    'Dairy and calf nuts (12.5 ME, 16% protein)': 0.90,
+    'Dairy and calf nuts (13ME,18% protein)': 0.90,
+    'Dark grains - barley': 0.90,
+    'Dark grains - maize': 0.90,
+    'Dark grains - wheat': 0.90,
+    'Draff / brewers grains (23% DM)': 0.23,
+    'Dried Grass': 0.90,
+    'Dried Lucerne ': 0.90,
+    'Early potatoes - Potatoes_hg': 0.20,
+    'Ewe nuts (12.5 ME, 18% protein)': 0.90,
+    'Expelled Rapseed meal (Neopro)': 0.90,
+    'Feed spring wheat - Grain_hg': 0.88,
+    'Feed spring wheat - Straw_hg': 0.85,
+    'Feed wheat (all) - Grain_hg': 0.88,
+    'Feed wheat (all) - Straw_hg': 0.85,
+    'Feed winter barley - Grain_hg': 0.88,
+    'Feed winter barley - Straw_hg': 0.85,
+    'Feed winter wheat - Grain_hg': 0.88,
+    'Feed winter wheat - Straw_hg': 0.85,
+    'Field beans': 0.88,
+    'Field beans (all) - Pulse_hg': 0.88,
+    'Field beans (all) - Straw_hg': 0.85,
+    'Fishmeal': 0.90,
+    'Fodder beet (bulb)': 0.12,
+    'Forage maize - Silage_hg': 0.25,
+    'Grass silage - average': 0.25,
+    'Grass silage - good': 0.30,
+    'Grass silage - poor': 0.20,
+    'Hay': 0.90,
+    'Hay & graze - Hay_hg': 0.90,
+    'Lamb Finisher nuts (12.5 ME, 15% protein)': 0.90,
+    'Limestone flour': 1.0,
+    'Lo Pro Soyabean meal (40%)': 0.90,
+    'Lysine': 1.0,
+    'Magnesium chloride': 1.0,
+    'Maincrop processing potatoes - Potatoes_hg': 0.20,
+    'Maincrop ware potatoes - Potatoes_hg': 0.20,
+    'Maize (grain)': 0.88,
+    'Maize gluten Prairie meal (60% protein)': 0.90,
+    'Maize gluten feed (20% protein) ': 0.90,
+    'Maize silage': 0.25,
+    'Malting spring barley (all) - Grain_hg': 0.88,
+    'Malting spring barley (all) - Straw_hg': 0.85,
+    'Malting winter barley - Grain_hg': 0.88,
+    'Malting winter barley - Straw_hg': 0.85,
+    'Methionine': 1.0,
+    'Milk powder': 0.90,
+    'Milling wheat (all) - Grain_hg': 0.88,
+    'Milling wheat (all) - Straw_hg': 0.85,
+    'Minerals and Vitamins': 1.0,
+    'Minor cereals - Grain_hg': 0.88,
+    'Minor cereals - Straw_hg': 0.85,
+    'Molasses - beet': 0.90,
+    'Molasses - cane': 0.90,
+    'Monocalcium phosphate': 1.0,
+    'Oats (grain)': 0.88,
+    'Oilseed rape (all) - Oilseed_hg': 0.88,
+    'Oilseed rape (all) - Straw_hg': 0.85,
+    'Other beef blends ': 0.90,
+    'Other brassica veg - Brassica_hg': 0.12,
+    'Other dairy blends (13.5ME, 20% protein)': 0.90,
+    'Other dairy blends (22% protein)': 0.90,
+    'Palm Kernel expeller': 0.90,
+    'Peas': 0.88,
+    'Pot ale syrup': 0.90,
+    'Potatoes (brock)': 0.20,
+    'Potatoes (ware)': 0.20,
+    'Pre-mix': 1.0,
+    'Protected palm oil': 1.0,
+    'Rape Meal': 0.90,
+    'Rape Meal - expeller': 0.90,
+    'Rapeseed - full fat': 0.90,
+    'Red clover - Silage_hg': 0.25,
+    'Red clover silage': 0.25,
+    'Salt': 1.0,
+    'Seaweed Meal': 1.0,
+    'Seed potatoes - Potatoes_hg': 0.20,
+    'Silage & graze - Silage_hg': 0.25,
+    'Soft milling winter wheat - Straw_hg': 0.85,
+    'Soya Bean oil': 1.0,
+    'Soya hulls': 0.90,
+    'Soyabean Full Fat': 0.90,
+    'Soyabean meal Hipro (Any origin 46%)': 0.90,
+    'Soyabean meal Hipro (Brazilian 48%)': 0.90,
+    'Spring brewing malting barley - Grain_hg': 0.88,
+    'Spring brewing malting barley - Straw_hg': 0.85,
+    'Spring distilling malting barley - Grain_hg': 0.88,
+    'Spring distilling malting barley - Straw_hg': 0.85,
+    'Spring feed barley - Grain_hg': 0.88,
+    'Spring feed barley - Straw_hg': 0.85,
+    'Spring field beans - Pulse_hg': 0.88,
+    'Spring oats - Grain_hg': 0.88,
+    'Spring oats - Straw_hg': 0.85,
+    'Spring peas - Pulse_hg': 0.88,
+    'Spring peas - Straw_hg': 0.85,
+    'Straw (barley)': 0.85,
+    'Straw (oats)': 0.85,
+    'Straw (wheat)': 0.85,
+    'Sugar beet pulp pellets': 0.90,
+    'Sugar beet roots': 0.12,
+    'Swedes': 0.12,
+    'Swedes / turnips - Swedes / turnips_hg': 0.12,
+    'Turnips (bulbs)': 0.12,
+    'Urea': 1.0,
+    'Vegetable protein concentrate': 0.90,
+    'Waste vegetables': 0.12,
+    'Wheat (grain)': 0.88,
+    'Wheat (grain) caustic soda': 0.88,
+    'Wheat (grain) commerical urea treatment': 0.88,
+    'Wheat (grain) urea': 0.88,
+    'Wheat feed pellets': 0.90,
+    'Wholecrop cereals - Silage_hg': 0.25,
+    'Wholecrop cereals - barley': 0.88,
+    'Wholecrop cereals - wheat': 0.88,
+    'Winter field beans - Pulse_hg': 0.88,
+    'Winter field beans - Straw_hg': 0.85,
+    'Winter oats  - Grain_hg': 0.88,
+    'Winter oats  - Straw_hg': 0.85,
+    'Winter oilseed rape - Oilseed_hg': 0.88,
+    'Winter oilseed rape - Straw_hg': 0.85,
+    'Winter rye - Grain_hg': 0.88,
+    'Winter rye - Straw_hg': 0.85
+}
+
+
+if __name__=="__main__":
+    save_dir='../output/Diet/'
+    import pandas as pd
+    from collections import Counter
+    # Convert to a DataFrame
+    data = []
+    for category, feeds in crop_groups.items():
+        for feed in feeds:
+            data.append({"Category": category, "Feed": feed})
+        
+    df = pd.DataFrame(data)
+    
+    # Save to CSV
+    df.to_csv(save_dir+'feed_mapping.csv', index=False, encoding='utf-8')
+    import json
+    # Save to JSON file
+    with open(save_dir+'feed_mapping.json', 'w', encoding='utf-8') as f:
+        json.dump(crop_groups, f, ensure_ascii=False, indent=4)
+        
+    ##code to check its surjective
+    mapped_crops=[]
+    for v in crop_groups.values():
+        mapped_crops+=v
+    mapped_crops_set=set(mapped_crops)
+    if mapped_crops_set==set(all_crops):
+        print("All crops appear appear in a group")
+    else:
+        print("missing crops are /n {}".format(set(all_crops)-mapped_crops_set))
+        
+    ###code to check its injectivev (nt reallt)
+    if len(mapped_crops)>len(all_crops):
+        print("mapp is not injective, there are {} more values in the image".format(len(mapped_crops)-len(all_crops)))
+    else:
+        print("map is injecetive")
+    ##save DM mapper
+    with open(save_dir+'feed_dm_yield.json', 'w', encoding='utf-8') as f:
+        json.dump(DM_yield, f, ensure_ascii=False, indent=4)
