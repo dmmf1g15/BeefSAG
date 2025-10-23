@@ -163,7 +163,7 @@ for e in enterprise_items:
             values = pd.Series([0] * len(pivot))
        
         weights = pivot['prop_head']
-        #Deal with a few nans in the weights which fucked things up.
+        #Mask to deal with a few nans in the weights which fucked things up.
         mask = ~np.isnan(values)
         c_mean = np.average(values[mask], weights=weights[mask])
         inner_dict[c] = c_mean
@@ -209,8 +209,11 @@ for e in enterprise_items:
     out_dict_ordered[e]=new_dict
         
 ###Analayssis using indiviual crops.  
-    
+##    
+
 highlight_value=5
+# Compute the maximum value across all plots
+y_max = max(max(ex.values()) for ex in out_dict_ordered.values()) * 100
 for e in out_dict_ordered.keys():
     ex=out_dict_ordered[e]
     f=plt.figure(figsize=(16, 6))
@@ -221,6 +224,7 @@ for e in out_dict_ordered.keys():
     for tick, v in zip(xticks, ex.values()):
         if v*100 > highlight_value:
             tick.set_color('red')
+    plt.ylim(0, y_max)
     plt.tight_layout(pad=3.0)
     plt.ylabel('Percent DM diet')
     plt.title(e)
@@ -256,12 +260,15 @@ for e in out_dict_ordered.keys():
     out_dict_grouped[e]=new_inner_dict            
     out_mass_grouped[e]=mass_inner_dict
 #plot
+
+y_max_group = max(max(ex.values()) for ex in out_dict_grouped.values()) * 100
 for e in out_dict_grouped.keys():
     ex=out_dict_grouped[e]
  
     plt.bar(ex.keys(),[v*100 for v in ex.values()])
     xticks=plt.xticks(rotation=45, ha='right',fontsize=10)[1]
     plt.tight_layout(pad=3.0)
+    plt.ylim(0,y_max_group)
     plt.ylabel('Percent DM diet')
     plt.title(e)
     plt.savefig(save_dir+'feed_grouping/'+str(e)+'_GROUPED_diet_bar.png',dpi=300)
@@ -284,6 +291,8 @@ out_df_grouped.to_excel(save_dir+'FeedGroup_Percentages.xlsx',index=False)
 
 #######Work out what animal types are on each enterprise item type
 #
+
+
 enterprise_make_up={} #{enterpirse:{c1:count}}
 for e in enterprise_items:
     inner_dict={bt:0 for bt in beef_types}# 
@@ -300,7 +309,7 @@ for e in enterprise_items:
 
     
 ### Make plots 
-
+#y_max_animals = max(max(ex.values()) for ex in enterprise_make_up.values()) * 100
 for e,v in enterprise_make_up.items():
     
     total = sum(v.values())
