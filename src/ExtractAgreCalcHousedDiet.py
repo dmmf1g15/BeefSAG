@@ -26,6 +26,16 @@ from ExtractJASManureHandlingData import map_df,nuts_df #for mapping
 from ExtractAgreCalcHousing import add_prop_item, calc_weighted_mean,itl_scot
 from crop_groups import crop_groups, DM_yield
 
+
+def feed_per_cow(row): #To deal with division by zero later
+    num = row['Feed Quantity_DM']
+    denom = row['n_cattle']
+    if pd.isna(denom) or denom == 0:
+        return 0
+    else:
+        return num / denom
+    
+
 import textwrap
 save_dir='../output/Diet/'
 agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20251014-SAGBeef_LAD.csv'
@@ -133,7 +143,7 @@ for e in enterprise_items:
     e_df_unique=e_df.drop_duplicates(subset='Report ID') #becuase there are duplicates per crop
     e_total_head=e_df_unique['n_cattle'].sum()
     e_df['prop_head']=e_df['n_cattle']/e_total_head #get proportion of cattle on this farm
-    e_df['Feed_per_cow']=e_df['Feed Quantity_DM']/e_df['n_cattle']
+    e_df['Feed_per_cow'] = e_df.apply(feed_per_cow, axis=1) #divides safley
     
     #Need to account for zero entries of the crop.
     #use pivot table to make the feeds columns and fiill missing with zero
@@ -153,7 +163,9 @@ for e in enterprise_items:
             values = pd.Series([0] * len(pivot))
        
         weights = pivot['prop_head']
-        c_mean = np.average(values, weights=weights)
+        #Deal with a few nans in the weights which fucked things up.
+        mask = ~np.isnan(values)
+        c_mean = np.average(values[mask], weights=weights[mask])
         inner_dict[c] = c_mean
        
     #Normalise.
@@ -287,8 +299,6 @@ for e in enterprise_items:
     enterprise_make_up[e] =inner_dict       
 
     
-    
-del enterprise_make_up[np.nan] 
 ### Make plots 
 
 for e,v in enterprise_make_up.items():
