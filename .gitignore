@@ -4,6 +4,8 @@
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
 
 
+src/*.csv #these are likelt test files
+
 output/
 writeups/
 src/test.csv
