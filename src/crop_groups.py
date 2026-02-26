@@ -369,7 +369,7 @@ DM_yield={
     'Wheat (grain) commerical urea treatment': 0.88,
     'Wheat (grain) urea': 0.88,
     'Wheat feed pellets': 0.90,
-    'Wholecrop cereals - Silage_hg': 0.25,
+    'Wholecrop cereals - Silage_hg': 0.4,
     'Wholecrop cereals - barley': 0.88,
     'Wholecrop cereals - wheat': 0.88,
     'Winter field beans - Pulse_hg': 0.88,
