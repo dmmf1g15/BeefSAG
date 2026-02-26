@@ -9,10 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import Normalize
 import geopandas as gpd
-import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
-from ExtractJASManureHandlingData import  beef_items, manure_time_items, df,map_df, converter_df, add_proprtion_of_items,LADS
+#from ExtractJASManureHandlingData import  beef_items, manure_time_items, df,map_df, converter_df, add_proprtion_of_items,LADS
+from ExtractJASManureHandlingData import  beef_items, manure_time_items, add_proprtion_of_items
+from global_data import df, map_df,nuts_df,itl_scot,NUTS2,calc_weighted_mean,LADS
 import textwrap
 
 
@@ -68,7 +67,7 @@ if __name__ == "__main__":
     #save csv:
     df_out=pd.DataFrame.from_dict(out)
     df_out.to_csv(save_dir+'manure_time_means.csv')
-    '''
+    
     #Do regional plots
     out_region={} #{LAD:{manure_group:time}}
     counter=0
@@ -132,6 +131,6 @@ if __name__ == "__main__":
     #plt.tight_layout()
     #plt.subplots_adjust(wspace=0, right=0.9)  # wspace controls space between plots
     plt.savefig(save_dir+'manure_time_regional.png',dpi=300)
-    '''
+    
                    
                 

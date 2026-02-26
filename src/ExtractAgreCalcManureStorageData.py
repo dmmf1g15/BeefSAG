@@ -12,13 +12,11 @@ from matplotlib.colors import Normalize
 import matplotlib as mpl
 import geopandas as gpd
 import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
 
-from ExtractJASManureHandlingData import map_df,nuts_df #for mapping
-from ExtractAgreCalcHousing import add_prop_item, calc_weighted_mean,itl_scot, NUTS2,LADS,map_df,nuts_df
 
+from ExtractAgreCalcHousing import add_prop_item
+from global_data import itl_scot, map_df,nuts_df, calc_weighted_mean
 
 import textwrap
 
@@ -26,9 +24,7 @@ save_dir='../output/ManureStorageType/AC/'
 agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef_LAD.csv'
 
 plotting = 'nuts'
-geoplotting={'nuts':{'shapes':NUTS2,'col':'NUTS2','df':nuts_df,'map_col':'ITL225CD'},
-                 'LAD':{'shapes':LADS,'col':'LAD_CODE','df':map_df,'map_col':'LAD22CD'}
-                        } #to format plotting below
+
 
 df_raw=pd.read_csv(agrecalc_path)
 df_raw=df_raw.drop(columns=['Housed (%)'])
@@ -45,7 +41,9 @@ LADS= list(set(df_beef['LAD_CODE'])) #unique local authroury district codes
 NUTS2=list(set(df_beef['NUTS2']))
 NUTS2=[n for n in NUTS2 if n in itl_scot] #filter down to scotland.
 
-
+geoplotting={'nuts':{'shapes':NUTS2,'col':'NUTS2','df':nuts_df,'map_col':'ITL225CD'},
+                 'LAD':{'shapes':LADS,'col':'LAD_CODE','df':map_df,'map_col':'LAD22CD'}
+                        } #to format plotting below
 
 
 #Define  manure types
@@ -90,7 +88,7 @@ for m in liquid_cols:
 df_solid=df_beef_clean[df_beef_clean['solid_total']>0]
 df_liquid=df_beef_clean[df_beef_clean['liquid_total']>0]
 
-'''
+
 ##first do mean and std for solid
 #only include farms whicih include some solid
 
@@ -126,7 +124,7 @@ for m in liquid_cols:
 check_sum_liquid=np.sum([v['mean'] for v in out_liquid.values()])
 out_liquid_df=pd.DataFrame.from_dict(out_liquid)
 out_liquid_df.to_csv(save_dir+'liquid_manure_AC.csv')
-'''
+
 
 
 
@@ -238,8 +236,7 @@ cbar.set_label('% solid manure stored as titled type', fontsize=16)
 #plt.tight_layout()
 #plt.subplots_adjust(wspace=0, right=0.9)  # wspace controls space between plots
 plt.savefig(save_dir+'solid_manure_AC_{}.png'.format(geoplotting[plotting]['col']),dpi=300)
-
-'''
+plt.close('all')
 #In time plots
 liquid_plot={m:[] for m in liquid_cols}
 for y in years:
@@ -274,4 +271,4 @@ plt.ylabel('Percent of solid manure managed as')
 plt.legend()
 plt.savefig(save_dir+'solid_in_time_AC.png', dpi=200)
 plt.close('all')
-'''
+

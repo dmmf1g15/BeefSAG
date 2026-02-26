@@ -8,10 +8,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import geopandas as gpd
 
+from global_data import df,NUTS2, LADS, map_df,nuts_df, calc_weighted_mean
 import warnings
-from pandas.errors import SettingWithCopyWarning
+#from pandas.errors import SettingWithCopyWarning
 
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
+#warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import textwrap
 
 def add_proprtion_of_items(df,list_of_cols,prefix=''):
@@ -25,21 +26,14 @@ def add_proprtion_of_items(df,list_of_cols,prefix=''):
     df[prefix+'_prop']=df.apply(lambda row: np.nansum(row[list_of_cols])/total,axis=1)
     return df
 
-
-def parish_to_LAD22CODE(parish_no,converter_df):
-    row=converter_df[converter_df['parish']==parish_no]
-    #print(row['LAcode'])
-    if not row.empty:
-        return row['LAcode'].iloc[0]
-    else:
-        return np.nan
-
+'''
 def calc_weighted_mean(df,col,w_col):
     #to calculate weighted mean using two cols
     mean=df.apply(lambda row: row[col]*row[w_col],axis=1).sum()
     std=np.sqrt(df.apply(lambda row: (row[col]-mean)**2*row[w_col],axis=1).sum())
     return mean,std
-   
+
+'''   
 
 beef_items=[('cts301','Female beef cattle under 1 yr'),('cts303','Female beef cattle aged 1-2 yrs'),('cts307','Female beef cattle without offspring aged 2 yrs and over'),
             ('cts311','Male cattle aged 2 yrs and over'),('cts310','Male cattle aged 1-2 yrs'),('cts309','Male cattle under 1 yr'),
@@ -72,33 +66,6 @@ manure_time_items=[('item5124', 'Manure stored in compost piles (months)'),
                     ('item5127', 'Liquid manure/slurry storage (months)'),
                     ('item5128', 'Manure stored in other facilities (not elsewhere classified) (months)')
                         ]
-
-JAC_path='D:\\JAS\\jas2holdings2023\\jas2holdings2023.dta'
-nuts_path=r'D:\SOURCED-DATA\NUTS\ITL2_JAN_2025_UK_BFC\ITL2_JAN_2025_UK_BFC.shp'
-map_path='D:\\SOURCED-DATA\\Admin-Regions\\Local_Authority_Districts_(December_2022)_Boundaries_UK_BFC\\Local_Authority_Districts_(December_2022)_Boundaries_UK_BFC\\LAD_DEC_2022_UK_BFC.shp'
-map_df=gpd.read_file(map_path)
-itl_scot=['TLM0','TLM1','TLM2','TLM3', 'TLM5', 'TLM9'] #list of itl_codes level 2 2025 that are in scotland.
-nuts_df=gpd.read_file(nuts_path) #not really nuts but itl2
-nuts_df=nuts_df[nuts_df['ITL225CD'].isin(itl_scot)] #filter to scotland
-
-
-
-converter_path=r'D:\SOURCED-DATA\NUTS\ParishGeographyLookups.xlsx'
-converter_df=pd.read_excel(converter_path)
-df=pd.read_stata(JAC_path)
-df['LAD22CD']=df.apply(lambda row: parish_to_LAD22CODE(row['parish'],converter_df),axis=1) #add in a new column for mapping
-LADS=list(set(df['LAD22CD']))
-map_df=map_df[map_df['LAD22CD'].isin(LADS)] #filter to scotlandd
-
-###WORK FROM HERE. USE BELOW TO CONVERT JAC to ITL2. Note use the LAD output above as input LAD -> ITLS map in the cav below.
-nuts_converter_path=r'D:\SOURCED-DATA\NUTS\LAD_(December_2024)_to_LAU1_to_ITL3_to_ITL2_to_ITL1_(January_2025)_Lookup_in_the_UK.csv'
-converter_nuts_df=pd.read_csv(nuts_converter_path)
-#make a dictionary to convert
-nuts_converter_dict=dict(zip(converter_nuts_df['LAD24CD'],converter_nuts_df['ITL225CD']))
-#LAD24CD -> ITL225 mapper.
-nuts_converter_dict[np.nan] = np.nan #make sure nan gets mapped to nan
-df['ITL225CD']=df.apply(lambda row: nuts_converter_dict[row['LAD22CD']],axis=1)
-NUTS2=list(set(df['ITL225CD']))
 
 if __name__=="__main__":
     beef_farm_cutoff=10# how many beef cows required to be called a beef farm
@@ -142,7 +109,7 @@ if __name__=="__main__":
     df_solid_liquid['solid_percent']=df_solid_liquid.apply(lambda row: np.nansum(row[solid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1) #to make sure it adds to 100%
     df_solid_liquid['liquid_percent']=df_solid_liquid.apply(lambda row: np.nansum(row[liquid_manure_items])/(np.nansum(row[solid_manure_items])+np.nansum(row[liquid_manure_items])),axis=1)
     
-    '''
+    
     #Caluclate for whole country
     liquid_percents={}
     liquid_sds={}
@@ -191,7 +158,7 @@ if __name__=="__main__":
     
         
     plt.savefig(save_dir+ 'histogram.png')    
-    '''
+    
     
     
     df_beef_geo=df_solid_liquid[~df_solid_liquid[geoplotting[plotting]['col']].isna()] #drop the rows with no lads code

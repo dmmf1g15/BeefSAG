@@ -12,12 +12,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import geopandas as gpd
 import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
+#from pandas.errors import SettingWithCopyWarning
+#warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
 
-from ExtractJASManureHandlingData import map_df,nuts_df,itl_scot #for mapping
-
+from global_data import NUTS2, LADS, map_df,nuts_df, itl_scot, calc_weighted_mean
 import textwrap
 
 def add_prop_item(df,item):
@@ -50,13 +49,6 @@ def add_prop_item(df,item):
     
         return df_items             
  
-            
-def calc_weighted_mean(df,col,w_col):
-    #to calculate weighted mean using two cols
-    tot=df[w_col].sum()
-    mean=df.apply(lambda row: row[col]*row[w_col]/tot,axis=1).sum()
-    std=np.sqrt(df.apply(lambda row: (row[col]-mean)**2*row[w_col]/tot,axis=1).sum())
-    return mean,std
 
 
 

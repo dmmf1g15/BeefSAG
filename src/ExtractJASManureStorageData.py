@@ -10,10 +10,9 @@ import matplotlib as mpl
 from matplotlib.colors import Normalize
 import geopandas as gpd
 import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
-warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
-from ExtractJASManureHandlingData import  beef_items, manure_storage_items, solid_manure_items, liquid_manure_items, df, map_df,nuts_df,itl_scot,NUTS2, add_proprtion_of_items,calc_weighted_mean,LADS
+
+from ExtractJASManureHandlingData import  beef_items, manure_storage_items, solid_manure_items, liquid_manure_items,add_proprtion_of_items
+from global_data import df, map_df,nuts_df,itl_scot,NUTS2,calc_weighted_mean,LADS
 import textwrap
 from copy import deepcopy
 
@@ -70,7 +69,7 @@ if __name__=="__main__":
         df_beef_clean[m+'_normed']=df_beef_clean[m]/df_beef_clean['liquid_total']
     
     
-    '''
+    
     #First we analyse the whole country starting with solid.
     #We need to only include farms which hace some solid
     df_solid=df_beef_clean[df_beef_clean['solid_total']>0].copy()
@@ -103,7 +102,7 @@ if __name__=="__main__":
     
     df_out_liquid=pd.DataFrame.from_dict(out_liquid)
     df_out_liquid.to_csv(save_dir+'liquid_manure_means.csv')    
-    '''
+    
     
     
     

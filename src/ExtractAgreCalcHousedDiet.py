@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import geopandas as gpd
 import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
+#from pandas.errors import SettingWithCopyWarning
+#warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
 
 from ExtractJASManureHandlingData import map_df,nuts_df #for mapping

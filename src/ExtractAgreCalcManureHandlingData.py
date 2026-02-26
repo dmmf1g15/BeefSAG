@@ -9,12 +9,13 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import geopandas as gpd
 import warnings
-from pandas.errors import SettingWithCopyWarning
-warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
+#from pandas.errors import SettingWithCopyWarning
+#warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
 
-from ExtractJASManureHandlingData import map_df,nuts_df #for mapping
-from ExtractAgreCalcHousing import add_prop_item, calc_weighted_mean,itl_scot
+
+from ExtractAgreCalcHousing import add_prop_item
+from global_data import itl_scot, map_df,nuts_df, calc_weighted_mean
 
 
 import textwrap
@@ -72,7 +73,7 @@ print('Dropped {} farm years since they had no managed manure'.format(farm_years
 df_beef_clean['solid_percent']=df_beef_clean[solid_cols].sum(axis=1)/df_beef_clean['managed_percent']
 df_beef_clean['liquid_percent']=df_beef_clean[liquid_cols].sum(axis=1)/df_beef_clean['managed_percent']
 
-'''
+
 ###Make histogram and spit out means and stds
 out_dict={}#{<1:{mean_liquid:x,std_liquid,....,n_farm_years,n_cattle_years}
 fig,axs=plt.subplots(nrows=2,ncols=2,figsize=(10, 10))
@@ -111,9 +112,9 @@ plt.savefig(save_dir+'histogram_AC.png',dpi=300)
 df_out=pd.DataFrame(out_dict)
 df_out=df_out[sorted(df_out.columns)] # arrange alphabeticaly
 df_out.to_csv(save_dir+'liquid_vs_solid_AC.csv')
-'''
 
-'''
+
+
 #Make spatial means
 plotting = 'LAD'
 geoplotting={'nuts':{'shapes':NUTS2,'col':'NUTS2','df':nuts_df,'map_col':'ITL225CD'},
@@ -167,7 +168,7 @@ for i,bt in enumerate(list(beef_groups.keys())): #bt=<1 ot >1 here
 axs[-1].axis('off')
 axs[-2].axis('off')
 fig.savefig(save_dir+key_to_plot+'{}_spatial.png'.format(geoplotting[plotting]['col']),dpi=300)
-'''    
+plt.close('all')
 
 #Time plots (tyring groubby method)
 #make new column which says if its <1 or >1
