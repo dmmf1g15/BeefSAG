@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import Normalize
 import geopandas as gpd
-#from ExtractJASManureHandlingData import  beef_items, manure_time_items, df,map_df, converter_df, add_proprtion_of_items,LADS
 from ExtractJASManureHandlingData import  beef_items, manure_time_items, add_proprtion_of_items
 from global_data import df, map_df,nuts_df,itl_scot,NUTS2,calc_weighted_mean,LADS
 import textwrap
@@ -18,6 +17,10 @@ import textwrap
 if __name__ == "__main__":
     #df is the JAC2022 where we have mapped the farms to a Local authroity for mapping.
     save_dir='../output/ManureStorageTime/'
+    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
+    geoplotting={'nuts':{'shapes':NUTS2,'col':'ITL225CD','df':nuts_df,'map_col':'ITL225CD'},
+                 'LAD':{'shapes':LADS,'col':'LAD22CD','df':map_df,'map_col':'LAD22CD'}
+                        } #to format geo plotting.
     
     beef_farm_cutoff=10# how many beef cows required to be called a beef farm
     df_beef_cols=df[[b[0] for b in beef_items]] #only beef item cols
@@ -70,10 +73,9 @@ if __name__ == "__main__":
     
     #Do regional plots
     out_region={} #{LAD:{manure_group:time}}
-    counter=0
-    for LAD in LADS:
-        print("on {} out of {}".format(counter,len(LADS)))
-        df_lad=df_beef_clean[df_beef_clean['LAD22CD']==LAD] #this particular LAD
+    for counter,LAD in enumerate(geoplotting[plotting]['shapes']):
+        print("on {} out of {}".format(counter,len(geoplotting[plotting]['shapes'])))
+        df_lad=df_beef_clean[df_beef_clean[geoplotting[plotting]['col']]==LAD] #this particular LAD #df_beef_geo[geoplotting[plotting]['col']]==LAD
         inner_dict={}
         for m in manure_time_items: #m is a tuple
             df_for_calc=df_lad[~df_lad[m[0]].isna()] #remove nans in this manure type
@@ -85,10 +87,11 @@ if __name__ == "__main__":
                 weighted_mean=df_for_calc_prop.apply(lambda row: row[m[0]]*row['beef'+'_prop'],axis=1).sum()
             inner_dict[m[1]]=weighted_mean
         out_region[LAD]=inner_dict
-        counter+=1
-    #join this data onto map_df    
+
+    #join this data onto gdf
+    gdf=geoplotting[plotting]['df'] #pick it out for ease of syntax    
     out={} #to save means and stds for each type in manure_time_items
-    fig,axs=plt.subplots(ncols=int(np.ceil(len(manure_time_items)/2)),nrows=2, figsize=(9,1 * len(manure_time_items)), constrained_layout=True)
+    fig,axs=plt.subplots(ncols=2,nrows=int(np.ceil(len(manure_time_items)/2)), figsize=(1 * len(manure_time_items),9), constrained_layout=True)
     axs=axs.flatten()
     #I want to get a global vmax and min so extrac data first
     all_values=[]
@@ -102,16 +105,16 @@ if __name__ == "__main__":
 
     
     
-    xmin, ymin, xmax, ymax = map_df.total_bounds #bounds of map
+    xmin, ymin, xmax, ymax = gdf.total_bounds #bounds of map
     
     for i,m in enumerate(manure_time_items):
         all_values += [v[m[1]] for v in out_region.values()]
         mapper_dict={k:v[m[1]] for k,v in out_region.items()} #to join
-        map_df[m[0]+'_mean']=map_df['LAD22CD'].map(mapper_dict)
+        gdf[m[0]+'_mean']=gdf[geoplotting[plotting]['map_col']].map(mapper_dict)
         #plot
         
         
-        map_df.plot(column=map_df[m[0] + '_mean'], cmap=cmap, norm=norm,ax=axs[i], legend=False,missing_kwds={'color': 'lightgrey'})
+        gdf.plot(column=gdf[m[0] + '_mean'], cmap=cmap, norm=norm,ax=axs[i], legend=False,missing_kwds={'color': 'lightgrey'})
         
 
         #axs[i].set_aspect('auto')
@@ -130,7 +133,7 @@ if __name__ == "__main__":
     
     #plt.tight_layout()
     #plt.subplots_adjust(wspace=0, right=0.9)  # wspace controls space between plots
-    plt.savefig(save_dir+'manure_time_regional.png',dpi=300)
+    plt.savefig(save_dir+'manure_time_regional_{}.png'.format(plotting),dpi=300)
     
                    
                 
