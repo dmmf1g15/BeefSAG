@@ -73,7 +73,7 @@ if __name__=="__main__":
     
     
     #Switches for plotting if needed
-    plotting='LAD' #chose #nuts or LAD to decide what gets plot.
+    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
     
     geoplotting={'nuts':{'shapes':NUTS2,'col':'ITL225CD','df':nuts_df,'map_col':'ITL225CD'},
                  'LAD':{'shapes':LADS,'col':'LAD22CD','df':map_df,'map_col':'LAD22CD'}
@@ -155,10 +155,11 @@ if __name__=="__main__":
         
         i=i+2
         
-    
+    df_out=pd.DataFrame({'liquid_percent':liquid_percents,'liquid_sd':liquid_sds,'solid_percent':solid_percents,'solid_sd':solid_sds})
+    df_out.to_csv(save_dir+'JAC_manure_solid_liquid_means.csv')
         
     plt.savefig(save_dir+ 'histogram.png')    
-    
+    plt.close('all')
     
     
     df_beef_geo=df_solid_liquid[~df_solid_liquid[geoplotting[plotting]['col']].isna()] #drop the rows with no lads code
