@@ -18,12 +18,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 import geopandas as gpd
 import warnings
+import sys
+
 #from pandas.errors import SettingWithCopyWarning
 #warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
+from global_data import itl_scot
 
-from ExtractJASManureHandlingData import map_df,nuts_df #for mapping
-from ExtractAgreCalcHousing import add_prop_item, calc_weighted_mean,itl_scot
+sys.path.append('./mappings')
 from crop_groups import crop_groups, DM_yield
 
 
