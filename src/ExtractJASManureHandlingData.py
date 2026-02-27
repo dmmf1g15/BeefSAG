@@ -56,8 +56,8 @@ manure_storage_items=[('item5115', 'Manure solid storage in heaps %'),
 
 
 
-solid_manure_items=['item5115','item5116','item5117','item5118','item5122'] #items that are solid manure
-liquid_manure_items=['item5119','item5120','item5121','item5123'] #items that are liquid manure.
+solid_manure_items=['item5115','item5116','item5118','item5122'] #items that are solid manure
+liquid_manure_items=['item5119','item5120','item5121','item5123','item5117'] #items that are liquid manure.
     
 
 manure_time_items=[('item5124', 'Manure stored in compost piles (months)'),
