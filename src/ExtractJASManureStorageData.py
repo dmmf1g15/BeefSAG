@@ -31,7 +31,7 @@ if __name__=="__main__":
     beef_farm_cutoff=10# how many beef cows required to be called a beef farm
     save_dir='../output/ManureStorageType/'
     #Switches for plotting if needed
-    plotting='LAD' #chose #nuts or LAD to decide what gets plot.
+    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
     
     geoplotting={'nuts':{'shapes':NUTS2,'col':'ITL225CD','df':nuts_df,'map_col':'ITL225CD'},
                  'LAD':{'shapes':LADS,'col':'LAD22CD','df':map_df,'map_col':'LAD22CD'}
@@ -140,8 +140,8 @@ if __name__=="__main__":
     for m in solid_manure_items:
         all_values += [v[m] for v in out_solid_region.values()]
     
-    vmin = min(all_values)
-    vmax = max(all_values)
+    vmin = np.nanmin(all_values)
+    vmax = np.nanmax(all_values)
     norm = Normalize(vmin=vmin, vmax=vmax)
     cmap = 'viridis'
     xmin, ymin, xmax, ymax = gdf.total_bounds #bounds of map
@@ -199,15 +199,15 @@ if __name__=="__main__":
         
     #join this data onto map_df    
     gdf=geoplotting[plotting]['df'] #pick it out for ease of syntax
-    fig,axs=plt.subplots(nrows=int(np.ceil(len(liquid_manure_items)/2)),ncols=2, figsize=(10, 10), constrained_layout=True)
+    fig,axs=plt.subplots(nrows=int(np.ceil(len(liquid_manure_items)/2)),ncols=2, figsize=(10, 15), constrained_layout=True)
     axs=axs.flatten()
     #I want to get a global vmax and min so extrac data first
     all_values=[]
     for m in liquid_manure_items:
         all_values += [v[m] for v in out_liquid_region.values()]
     
-    vmin = min(all_values)
-    vmax = max(all_values)
+    vmin = np.nanmin(all_values)
+    vmax = np.nanmax(all_values)
     norm = Normalize(vmin=vmin, vmax=vmax)
     cmap = 'viridis'
     xmin, ymin, xmax, ymax = gdf.total_bounds #bounds of map
