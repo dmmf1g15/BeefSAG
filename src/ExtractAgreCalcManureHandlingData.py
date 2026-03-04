@@ -14,14 +14,13 @@ import warnings
 import requests
 
 
-from ExtractAgreCalcHousing import add_prop_item
+from ExtractAgreCalcHousing import add_prop_item, agrecalc_path
 from global_data import itl_scot, map_df,nuts_df, calc_weighted_mean
 
 
 import textwrap
 
 save_dir='../output/ManureHandlingSystem/AC/'
-agrecalc_path='D:\\AgreCalc\\BeefSAG_2025\\20250728-SAGBeef_LAD.csv'
 
 
 
