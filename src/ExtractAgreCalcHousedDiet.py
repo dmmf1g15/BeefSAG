@@ -23,11 +23,12 @@ import sys
 #from pandas.errors import SettingWithCopyWarning
 #warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
+from ExtractAgreCalcHousing import agrecalc_path
 from global_data import itl_scot
 
 sys.path.append('./mappings')
 from crop_groups import crop_groups, DM_yield
-
+from livestock_units import AC_LU_mapping #to convert to livestock units for diet calculations
 
 def feed_per_cow(row): #To deal with division by zero later
     num = row['Feed Quantity_DM']
@@ -121,7 +122,7 @@ all_types=home_grown_types+bought_in_types
 report_id_head={} #this will stay as a dict as usesful look up.
 for report_id,g1 in df_beef.groupby(['Report ID']):
     g1=g1.drop_duplicates(subset=['Enterprise Sector Item']) #becasue there are multiple rows per cow type
-    total=g1['Average number over 12 Months'].sum()
+    total=(g1['Average number over 12 Months']*g1['Enterprise Sector Item'].map(AC_LU_mapping)).sum() #Account for livestock units to get a better estimate of the number of cows on the farm. This is becasue some farms have more calves and so more animals but they are smaller and eat less.
     report_id_head[report_id[0]]=total
 
 ####Now data is in good format to work out avergage feed!####
@@ -140,7 +141,7 @@ for e in enterprise_items:
     e_bought_in_df=e_bought_in_df.drop(columns=['Enterprise Item']) #drop this column as we no longer need it and so they both have the same column names
     #Make one big df
     e_df=pd.concat([e_home_grown_df,e_bought_in_df])
-    e_df['n_cattle']=e_df['Report ID'].apply(lambda id:report_id_head[id]) #so each row has the heads using the dict
+    e_df['n_cattle']=e_df['Report ID'].apply(lambda id:report_id_head[id]) #so each row has the heads using the dict which accounts for livestock units. 
     #Get total proportion of cows on each farm
     e_df_unique=e_df.drop_duplicates(subset='Report ID') #becuase there are duplicates per crop
     e_total_head=e_df_unique['n_cattle'].sum()
@@ -234,14 +235,14 @@ for e in out_dict_ordered.keys():
     plt.close()
 
 ###Save excel
-pd_dict={'Enterprise Item':[],'Crop Name':[], 'Head-Weighted Mean Proportion':[], 'Head-Weighted Mean Mass (t/head)':[]}
+pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[]}
 
 #with pd.ExcelWriter(save_dir+'Feed_Percentages.xlsx', engine='openpyxl') as writer:
 for e,v in out_dict_ordered.items():
    pd_dict['Enterprise Item']=pd_dict['Enterprise Item']+[e]*len(v)
    pd_dict['Crop Name']+=list(v.keys())
-   pd_dict['Head-Weighted Mean Proportion']+=list(v.values()) 
-   pd_dict['Head-Weighted Mean Mass (t/head)']+=[out_mass[e][crop] for crop in v.keys() ]
+   pd_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
+   pd_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass[e][crop] for crop in v.keys() ]
  
 out_df_all_crop=pd.DataFrame(pd_dict)
 out_df_all_crop.to_excel(save_dir+'Feed_Percentages.xlsx',index=False)       
@@ -279,13 +280,13 @@ for e in out_dict_grouped.keys():
 
 #Save excel
 
-pd_group_dict={'Enterprise Item':[],'Group Name':[], 'Head-Weighted Mean Proportion':[], 'Head-Weighted Mean Mass (t/head)':[]}
+pd_group_dict={'Enterprise Item':[],'Group Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[]}
 
 for e,v in out_dict_grouped.items():
    pd_group_dict['Enterprise Item']+=[e]*len(v)
    pd_group_dict['Group Name']+=list(v.keys())
-   pd_group_dict['Head-Weighted Mean Proportion']+=list(v.values()) 
-   pd_group_dict['Head-Weighted Mean Mass (t/head)']+=[out_mass_grouped[e][group] for group in v.keys() ]
+   pd_group_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
+   pd_group_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass_grouped[e][group] for group in v.keys() ]
  
 out_df_grouped=pd.DataFrame(pd_group_dict)
 out_df_grouped.to_excel(save_dir+'FeedGroup_Percentages.xlsx',index=False)       
@@ -293,8 +294,6 @@ out_df_grouped.to_excel(save_dir+'FeedGroup_Percentages.xlsx',index=False)
 
 #######Work out what animal types are on each enterprise item type
 #
-
-
 enterprise_make_up={} #{enterpirse:{c1:count}}
 for e in enterprise_items:
     inner_dict={bt:0 for bt in beef_types}# 
