@@ -393,7 +393,7 @@ if __name__=="__main__":
     data = []
     for category, feeds in crop_groups.items():
         for feed in feeds:
-            data.append({"Category": category, "Feed": feed})
+            data.append({"Category": category, "Feed": feed, "Dry matter yield": DM_yield[feed]})
         
     df = pd.DataFrame(data)
     

@@ -23,7 +23,7 @@ import sys
 #from pandas.errors import SettingWithCopyWarning
 #warnings.filterwarnings("ignore", category=SettingWithCopyWarning)
 import requests
-from ExtractAgreCalcHousing import agrecalc_path
+from ExtractAgreCalcHousing import agrecalc_path,housed_manure_cols
 from global_data import itl_scot
 
 sys.path.append('./mappings')
@@ -38,6 +38,14 @@ def feed_per_cow(row): #To deal with division by zero later
     else:
         return num / denom
     
+def feed_per_housed_cow(row):
+    num = row['Feed Quantity_DM']
+    denom = row['n_cattle']*row['Housed (%)']/100
+    if pd.isna(denom) or denom == 0:
+        return 0
+    else:
+        return num / denom
+
 
 import textwrap
 save_dir='../output/Diet/'
@@ -52,8 +60,20 @@ forage_crops = ['Forage rye - Forage_hg', 'Kale /stubble turnips/ swedes - Forag
 df_raw=pd.read_csv(agrecalc_path)
 df_raw=df_raw.drop(columns=['Housed (%)'])
 df_beef=df_raw[df_raw['Sector']=='Beef'] #only beef rows
+df_beef['Housed (%)']=df_beef[housed_manure_cols].sum(axis=1) #Make new row. We use this later to get housed days..
+
 beef_types=list(set(df_beef['Enterprise Sector Item'])) #unique beef animal types
 beef_types=sorted(beef_types)
+
+#Make up of enterprise items proprtionally
+enterprise_proportions=df_beef['Enterprise Item'].value_counts(normalize=True) #proportion of each enterprise item in the beef data. This is useful to know when we are looking at the results as it gives us an idea of how much data we have for each enterprise item.
+
+
+#How many reports have more than one beef enterprise
+beef_report_counts=df_beef.groupby('Report ID')['Enterprise Item'].nunique()
+#What proportion have omore than one enterprise item?
+proportion_multi_enterprise=(beef_report_counts>1).sum()/len(beef_report_counts)
+
 
 
 years=list(set(df_beef['Year End'])) #unique years
@@ -134,6 +154,7 @@ enterprise_items=np.array([x for x in enterprise_items if not (x is np.nan or (i
 
 out_dict={} #{'Enterpirse item: {feed1:prop,feed2:prop....}}
 out_mass={}
+out_mass_per_housed_day={} # to deal with fact that some enterprises are more housed than others.
 for e in enterprise_items:
     e_bought_in_df=bought_in_df[bought_in_df['Enterprise Item']==e]
     e_report_ids=list(e_bought_in_df['Report ID'].unique()) #list of report ids which are this enterprise type
@@ -147,6 +168,7 @@ for e in enterprise_items:
     e_total_head=e_df_unique['n_cattle'].sum()
     e_df['prop_head']=e_df['n_cattle']/e_total_head #get proportion of cattle on this farm
     e_df['Feed_per_cow'] = e_df.apply(feed_per_cow, axis=1) #divides safley
+    e_df['Feed_per_housed_day'] = e_df.apply(feed_per_housed_cow, axis=1) #divides safley and accounts for housed days. with helper funciton above
     
     #Need to account for zero entries of the crop.
     #use pivot table to make the feeds columns and fiill missing with zero
@@ -178,19 +200,7 @@ for e in enterprise_items:
     #Save
     out_mass[e] = inner_dict
     out_dict[e] = inner_dict_norm
-       
-    '''
-    inner_dict={}
-    for c in all_types: #loop thorugh crops.
-        e_c_df=e_df[e_df['Feed Name']==c] #filter to crop
-        c_mean,c_std=calc_weighted_mean(e_c_df,'Feed_per_cow','prop_head') #this is mean feed per cow
-        inner_dict[c]=c_mean      
-    #normalise
-    tot=np.sum(list(inner_dict.values()))
-    inner_dict_norm={k:v/tot for k,v in inner_dict.items()}
-    out_mass[e]=inner_dict
-    out_dict[e]=inner_dict_norm
-    '''     
+
 
 ###Make sure each dicttionary has same keys and is same order so its easier to compare
 all_crop_keys=[]
