@@ -30,17 +30,9 @@ sys.path.append('./mappings')
 from crop_groups import crop_groups, DM_yield
 from livestock_units import AC_LU_mapping #to convert to livestock units for diet calculations
 
-def feed_per_cow(row): #To deal with division by zero later
+def feed_per_cow_fun(row): #To deal with division by zero later
     num = row['Feed Quantity_DM']
     denom = row['n_cattle']
-    if pd.isna(denom) or denom == 0:
-        return 0
-    else:
-        return num / denom
-    
-def feed_per_housed_cow(row):
-    num = row['Feed Quantity_DM']
-    denom = row['n_cattle']*row['Housed (%)']/100
     if pd.isna(denom) or denom == 0:
         return 0
     else:
@@ -138,12 +130,20 @@ pd.DataFrame(bought_in_types).to_csv(save_dir+'bought_in_types.csv')
 all_types=home_grown_types+bought_in_types
 
 ##We now have 2 dfs for the tonnes DM of each bought in and home-growbn df
-#Count cows in each report for averaging
-report_id_head={} #this will stay as a dict as usesful look up.
+
+#Count cows in each report for averaging and housed cows
+report_id_head={} #this will stay as a dict as usesful look up. its actually livestock unit
+report_id_housed_percent={} #proportion of year housed for each report id. 
 for report_id,g1 in df_beef.groupby(['Report ID']):
     g1=g1.drop_duplicates(subset=['Enterprise Sector Item']) #becasue there are multiple rows per cow type
-    total=(g1['Average number over 12 Months']*g1['Enterprise Sector Item'].map(AC_LU_mapping)).sum() #Account for livestock units to get a better estimate of the number of cows on the farm. This is becasue some farms have more calves and so more animals but they are smaller and eat less.
+    # livestock unit weights
+    lu = g1['Enterprise Sector Item'].map(AC_LU_mapping) #makes sure and counts with livestock units
+    weights = g1['Average number over 12 Months'] * lu
+    total = weights.sum()
     report_id_head[report_id[0]]=total
+    #save housed proportion using LU weighted mean
+    
+    report_id_housed_percent[report_id[0]]=np.average(g1['Housed (%)'], weights=weights)
 
 ####Now data is in good format to work out avergage feed!####
 #home_grown_df does not have info on 'Enterprise Info
@@ -154,7 +154,7 @@ enterprise_items=np.array([x for x in enterprise_items if not (x is np.nan or (i
 
 out_dict={} #{'Enterpirse item: {feed1:prop,feed2:prop....}}
 out_mass={}
-out_mass_per_housed_day={} # to deal with fact that some enterprises are more housed than others.
+mean_house_percent={}
 for e in enterprise_items:
     e_bought_in_df=bought_in_df[bought_in_df['Enterprise Item']==e]
     e_report_ids=list(e_bought_in_df['Report ID'].unique()) #list of report ids which are this enterprise type
@@ -162,14 +162,18 @@ for e in enterprise_items:
     e_bought_in_df=e_bought_in_df.drop(columns=['Enterprise Item']) #drop this column as we no longer need it and so they both have the same column names
     #Make one big df
     e_df=pd.concat([e_home_grown_df,e_bought_in_df])
-    e_df['n_cattle']=e_df['Report ID'].apply(lambda id:report_id_head[id]) #so each row has the heads using the dict which accounts for livestock units. 
+    e_df['n_cattle']=e_df['Report ID'].map(report_id_head) #so each row has the heads using the dict which accounts for livestock units. 
+    e_df['Housed (%)']=e_df['Report ID'].map(report_id_housed_percent) #so each row has the housed prop using the dict which accounts for livestock units.
     #Get total proportion of cows on each farm
     e_df_unique=e_df.drop_duplicates(subset='Report ID') #becuase there are duplicates per crop
     e_total_head=e_df_unique['n_cattle'].sum()
     e_df['prop_head']=e_df['n_cattle']/e_total_head #get proportion of cattle on this farm
-    e_df['Feed_per_cow'] = e_df.apply(feed_per_cow, axis=1) #divides safley
-    e_df['Feed_per_housed_day'] = e_df.apply(feed_per_housed_cow, axis=1) #divides safley and accounts for housed days. with helper funciton above
+    e_df['Feed_per_cow'] = e_df.apply(feed_per_cow_fun, axis=1) #divides safley
     
+    
+    #save hosuif=ng percent out.
+    house_mask= e_df_unique['Housed (%)'].notna()
+    mean_house_percent[e]=np.average(e_df_unique.loc[house_mask,'Housed (%)'], weights=e_df_unique.loc[house_mask,'n_cattle']) #get the mean housed percent for this enterprise type, weighted by number of cattle. This is useful to know when looking at results as it gives us an idea of how much the animals are housed on average for this enterprise type. We use the unique df here to avoid double counting farms with multiple crops.
     #Need to account for zero entries of the crop.
     #use pivot table to make the feeds columns and fiill missing with zero
     pivot = e_df.pivot_table(
@@ -177,22 +181,19 @@ for e in enterprise_items:
          columns='Feed Name',
          values='Feed_per_cow',
          aggfunc='sum',
-         fill_value=0
-     ).reset_index()
-    
+     ).fillna(0).reset_index()
+
+    for feed in all_types: #fill in missing feeds in this enterprise with zero
+        if feed not in pivot.columns:
+            pivot[feed] = 0
     inner_dict = {}
     for c in all_types:
-        if c in pivot.columns:
-            values = pivot[c]
-        else: # this deals with the fact that not all crops appear in this enterprise. So we fill with 0. IS THIS NEEDED?
-            values = pd.Series([0] * len(pivot))
-       
+        feed_per_cow = pivot[c]
+        feed_per_housed_day = pivot[c]
         weights = pivot['prop_head']
-        #Mask to deal with a few nans in the weights which fucked things up.
-        mask = ~np.isnan(values)
-        c_mean = np.average(values[mask], weights=weights[mask])
-        inner_dict[c] = c_mean
-       
+        
+        mask1 = ~np.isnan(feed_per_cow)
+        inner_dict[c] = np.average(feed_per_cow[mask1],weights=weights[mask1]) #deals with nans  
     #Normalise.
     tot = np.sum(list(inner_dict.values()))
     inner_dict_norm = {k: v / tot if tot > 0 else 0 for k, v in inner_dict.items()}
@@ -200,6 +201,7 @@ for e in enterprise_items:
     #Save
     out_mass[e] = inner_dict
     out_dict[e] = inner_dict_norm
+
 
 
 ###Make sure each dicttionary has same keys and is same order so its easier to compare
@@ -220,9 +222,15 @@ for e in enterprise_items:
         else:
             new_dict[ck]=0
     out_dict_ordered[e]=new_dict
-        
+
+
+#Make a out per housed day version
+out_mass_per_housed_day={} #copy the dict
+for e,v in out_mass.items():
+    inner_dict={crop:mass/(mean_house_percent[e]*365) for crop,mass in v.items()}
+    out_mass_per_housed_day[e]=inner_dict
 ###Analayssis using indiviual crops.  
-##    
+##    mean_house_percent
 
 highlight_value=5
 # Compute the maximum value across all plots
@@ -245,15 +253,17 @@ for e in out_dict_ordered.keys():
     plt.close()
 
 ###Save excel
-pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[]}
+pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[], 'LU-Weighted Mean Mass per housed day (t/head/day)':[], 'LU-Weighted Mean Housed Percent':[]}
 
-#with pd.ExcelWriter(save_dir+'Feed_Percentages.xlsx', engine='openpyxl') as writer:
+
 for e,v in out_dict_ordered.items():
    pd_dict['Enterprise Item']=pd_dict['Enterprise Item']+[e]*len(v)
    pd_dict['Crop Name']+=list(v.keys())
    pd_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
    pd_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass[e][crop] for crop in v.keys() ]
- 
+   pd_dict['LU-Weighted Mean Mass per housed day (t/head/day)']+=[out_mass_per_housed_day[e][crop] for crop in v.keys() ]
+   pd_dict['LU-Weighted Mean Housed Percent']+=[mean_house_percent[e]] * len(v)
+
 out_df_all_crop=pd.DataFrame(pd_dict)
 out_df_all_crop.to_excel(save_dir+'Feed_Percentages.xlsx',index=False)       
 
@@ -262,16 +272,20 @@ out_df_all_crop.to_excel(save_dir+'Feed_Percentages.xlsx',index=False)
 #### Use crop_groups.py to get them into more useful groups.
 out_dict_grouped={} #
 out_mass_grouped={}
+out_mass_per_housed_day_grouped={}
 for e in out_dict_ordered.keys():
     new_inner_dict={group:0 for group in crop_groups.keys()} #initialise
     mass_inner_dict={group:0 for group in crop_groups.keys()} #initialise
+    out_mass_per_housed_day_inner_dict={group:0 for group in crop_groups.keys()} #initialise
     for group,list_ct in crop_groups.items():
         for ct,percent in out_dict_ordered[e].items(): #loop through all crops.
             if ct in list_ct:
                 new_inner_dict[group]+=percent
                 mass_inner_dict[group]+=out_mass[e][ct]
+                out_mass_per_housed_day_inner_dict[group]+=out_mass_per_housed_day[e][ct]
     out_dict_grouped[e]=new_inner_dict            
     out_mass_grouped[e]=mass_inner_dict
+    out_mass_per_housed_day_grouped[e]=out_mass_per_housed_day_inner_dict
 #plot
 
 y_max_group = max(max(ex.values()) for ex in out_dict_grouped.values()) * 100
@@ -309,14 +323,16 @@ plt.savefig(save_dir + 'feed_grouping/ALL_GROUPED_diet_bars.png', dpi=300)
 
 #Save excel
 
-pd_group_dict={'Enterprise Item':[],'Group Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[]}
+pd_group_dict={'Enterprise Item':[],'Group Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[], 'LU-Weighted Mean Mass per housed day (t/head/day)':[],'LU-Weighted Mean Housed Percent':[]}
 
 for e,v in out_dict_grouped.items():
-   pd_group_dict['Enterprise Item']+=[e]*len(v)
-   pd_group_dict['Group Name']+=list(v.keys())
-   pd_group_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
-   pd_group_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass_grouped[e][group] for group in v.keys() ]
- 
+    pd_group_dict['Enterprise Item']+=[e]*len(v)
+    pd_group_dict['Group Name']+=list(v.keys())
+    pd_group_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
+    pd_group_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass_grouped[e][group] for group in v.keys() ]
+    pd_group_dict['LU-Weighted Mean Mass per housed day (t/head/day)']+=[out_mass_per_housed_day_grouped[e][group] for group in v.keys() ]
+    pd_group_dict['LU-Weighted Mean Housed Percent']+=[mean_house_percent[e]] * len(v)
+    
 out_df_grouped=pd.DataFrame(pd_group_dict)
 out_df_grouped.to_excel(save_dir+'FeedGroup_Percentages.xlsx',index=False)       
 
