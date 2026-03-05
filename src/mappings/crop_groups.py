@@ -420,3 +420,5 @@ if __name__=="__main__":
     ##save DM mapper
     with open(save_dir+'feed_dm_yield.json', 'w', encoding='utf-8') as f:
         json.dump(DM_yield, f, ensure_ascii=False, indent=4)
+    df_DM_yield=pd.DataFrame.from_dict(DM_yield, orient='index', columns=['DM_yield']).reset_index().rename(columns={'index':'Feed'})
+    df_DM_yield.to_csv(save_dir+'feed_dm_yield.csv', index=False, encoding='utf-8')

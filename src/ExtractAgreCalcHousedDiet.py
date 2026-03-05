@@ -265,18 +265,37 @@ for e in out_dict_ordered.keys():
 #plot
 
 y_max_group = max(max(ex.values()) for ex in out_dict_grouped.values()) * 100
-for e in out_dict_grouped.keys():
-    ex=out_dict_grouped[e]
- 
-    plt.bar(ex.keys(),[v*100 for v in ex.values()])
-    xticks=plt.xticks(rotation=45, ha='right',fontsize=10)[1]
-    plt.tight_layout(pad=3.0)
-    plt.ylim(0,y_max_group)
-    plt.ylabel('Percent DM diet')
-    plt.title(e)
-    plt.savefig(save_dir+'feed_grouping/'+str(e)+'_GROUPED_diet_bar.png',dpi=300)
-    plt.close()
+fig, axes = plt.subplots(4, 2, figsize=(16, 20))
+axes = axes.flatten()  # Flatten to iterate easily
 
+for i, (e, ex) in enumerate(out_dict_grouped.items()):
+    ax = axes[i]
+    
+    # Extract keys and convert values to percentages
+    labels = list(ex.keys())
+    values = [v * 100 for v in ex.values()]
+    
+    # Create the bar plot
+    ax.bar(labels, values, color='skyblue', edgecolor='navy')
+    
+    # Styling and Labels
+    ax.set_title(f"Grouped: {e}", fontsize=14, fontweight='bold')
+    ax.set_ylabel('Percent DM diet')
+    ax.set_ylim(0, y_max_group)
+    
+    # Format X-axis ticks
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+
+# Remove any unused subplots (if dict length < 8)
+for j in range(i + 1, len(axes)):
+    fig.delaxes(axes[j])
+
+# Adjust spacing to prevent title/label overlap
+plt.tight_layout(pad=5.0)
+
+# Save the combined figure
+plt.savefig(save_dir + 'feed_grouping/ALL_GROUPED_diet_bars.png', dpi=300)
 
 #Save excel
 
@@ -310,18 +329,37 @@ for e in enterprise_items:
 
     
 ### Make plots 
-#y_max_animals = max(max(ex.values()) for ex in enterprise_make_up.values()) * 100
-for e,v in enterprise_make_up.items():
-    
+fig, axes = plt.subplots(4, 2, figsize=(16, 20))
+axes = axes.flatten()
+
+for i, (e, v) in enumerate(enterprise_make_up.items()):
+    ax = axes[i]
     total = sum(v.values())
-    normalized_data = {k: vv / total for k, vv in v.items()}
-    plt.bar(normalized_data.keys(),normalized_data.values())
-    xticks=plt.xticks(rotation=45, ha='right',fontsize=10)[1]
-    plt.tight_layout(pad=3.0)
-    plt.ylabel('Percent of animals')
-    plt.title(e)
-    plt.savefig(save_dir+'enterprise_make_up/'+str(e)+'_MakeUp.png',dpi=300)
-    plt.close()
+    normalized_data = {k: (vv / total) * 100 for k, vv in v.items()}
+    
+    labels = list(normalized_data.keys())
+    values = list(normalized_data.values())
+    
+    ax.bar(labels, values, color='forestgreen', edgecolor='black')
+    
+    # Styling
+    ax.set_title(f"Enterprise: {e}", fontsize=14, fontweight='bold')
+    ax.set_ylabel('Percent of animals')
+    ax.set_ylim(0, 100) # Since it's normalized, 100% is the logical max
+    
+    # Format X-axis
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=10)
+
+# Remove any unused subplots
+for j in range(i + 1, len(axes)):
+    fig.delaxes(axes[j])
+
+# Adjust spacing
+plt.tight_layout(pad=5.0)
+
+# Save the combined figure
+plt.savefig(save_dir + 'enterprise_make_up/ALL_ENTERPRISE_MakeUp.png', dpi=300)
 
 
    
