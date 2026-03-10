@@ -227,7 +227,7 @@ for e in enterprise_items:
 #Make a out per housed day version
 out_mass_per_housed_day={} #copy the dict
 for e,v in out_mass.items():
-    inner_dict={crop:mass/(mean_house_percent[e]*365) for crop,mass in v.items()}
+    inner_dict={crop:mass/(mean_house_percent[e]*365/100) for crop,mass in v.items()}
     out_mass_per_housed_day[e]=inner_dict
 ###Analayssis using indiviual crops.  
 ##    mean_house_percent
@@ -309,7 +309,7 @@ for i, (e, ex) in enumerate(out_dict_grouped.items()):
     
     # Format X-axis ticks
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=12)
 
 # Remove any unused subplots (if dict length < 8)
 for j in range(i + 1, len(axes)):
@@ -375,7 +375,7 @@ for i, (e, v) in enumerate(enterprise_make_up.items()):
     
     # Format X-axis
     ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=10)
+    ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=12)
 
 # Remove any unused subplots
 for j in range(i + 1, len(axes)):
