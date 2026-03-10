@@ -32,7 +32,7 @@ from livestock_units import AC_LU_mapping #to convert to livestock units for die
 
 def feed_per_cow_fun(row): #To deal with division by zero later
     num = row['Feed Quantity_DM']
-    denom = row['n_cattle']
+    denom = row['n_lu'] #choose here either n_lu ot n_head depending on if we want per livestock unit or per head. Livestock unit is better as it accounts for different sizes of animals, but per head is easier to understand.
     if pd.isna(denom) or denom == 0:
         return 0
     else:
@@ -132,7 +132,8 @@ all_types=home_grown_types+bought_in_types
 ##We now have 2 dfs for the tonnes DM of each bought in and home-growbn df
 
 #Count cows in each report for averaging and housed cows
-report_id_head={} #this will stay as a dict as usesful look up. its actually livestock unit
+report_id_lu={} #this will stay as a dict as usesful look up. its actually livestock unit
+report_id_head={} #this is the actual head count, which we can use to check the livestock unit counts.
 report_id_housed_percent={} #proportion of year housed for each report id. 
 for report_id,g1 in df_beef.groupby(['Report ID']):
     g1=g1.drop_duplicates(subset=['Enterprise Sector Item']) #becasue there are multiple rows per cow type
@@ -140,7 +141,8 @@ for report_id,g1 in df_beef.groupby(['Report ID']):
     lu = g1['Enterprise Sector Item'].map(AC_LU_mapping) #makes sure and counts with livestock units
     weights = g1['Average number over 12 Months'] * lu
     total = weights.sum()
-    report_id_head[report_id[0]]=total
+    report_id_lu[report_id[0]]=total
+    report_id_head[report_id[0]]=g1['Average number over 12 Months'].sum() 
     #save housed proportion using LU weighted mean
     
     report_id_housed_percent[report_id[0]]=np.average(g1['Housed (%)'], weights=weights)
@@ -162,22 +164,23 @@ for e in enterprise_items:
     e_bought_in_df=e_bought_in_df.drop(columns=['Enterprise Item']) #drop this column as we no longer need it and so they both have the same column names
     #Make one big df
     e_df=pd.concat([e_home_grown_df,e_bought_in_df])
-    e_df['n_cattle']=e_df['Report ID'].map(report_id_head) #so each row has the heads using the dict which accounts for livestock units. 
+    e_df['n_lu']=e_df['Report ID'].map(report_id_lu) #so each row has the heads using the dict which accounts for livestock units. 
+    e_df['n_head']=e_df['Report ID'].map(report_id_head) #so each row has the heads using the dict which accounts for livestock units.
     e_df['Housed (%)']=e_df['Report ID'].map(report_id_housed_percent) #so each row has the housed prop using the dict which accounts for livestock units.
     #Get total proportion of cows on each farm
     e_df_unique=e_df.drop_duplicates(subset='Report ID') #becuase there are duplicates per crop
-    e_total_head=e_df_unique['n_cattle'].sum()
-    e_df['prop_head']=e_df['n_cattle']/e_total_head #get proportion of cattle on this farm
+    e_total_head=e_df_unique['n_lu'].sum()
+    e_df['prop_lu']=e_df['n_lu']/e_total_head #get proportion of cattle on this farm
     e_df['Feed_per_cow'] = e_df.apply(feed_per_cow_fun, axis=1) #divides safley
     
     
     #save hosuif=ng percent out.
     house_mask= e_df_unique['Housed (%)'].notna()
-    mean_house_percent[e]=np.average(e_df_unique.loc[house_mask,'Housed (%)'], weights=e_df_unique.loc[house_mask,'n_cattle']) #get the mean housed percent for this enterprise type, weighted by number of cattle. This is useful to know when looking at results as it gives us an idea of how much the animals are housed on average for this enterprise type. We use the unique df here to avoid double counting farms with multiple crops.
+    mean_house_percent[e]=np.average(e_df_unique.loc[house_mask,'Housed (%)'], weights=e_df_unique.loc[house_mask,'n_lu']) #get the mean housed percent for this enterprise type, weighted by number of cattle. This is useful to know when looking at results as it gives us an idea of how much the animals are housed on average for this enterprise type. We use the unique df here to avoid double counting farms with multiple crops.
     #Need to account for zero entries of the crop.
     #use pivot table to make the feeds columns and fiill missing with zero
     pivot = e_df.pivot_table(
-         index=['Report ID', 'prop_head'],
+         index=['Report ID', 'prop_lu'],
          columns='Feed Name',
          values='Feed_per_cow',
          aggfunc='sum',
@@ -190,7 +193,7 @@ for e in enterprise_items:
     for c in all_types:
         feed_per_cow = pivot[c]
         feed_per_housed_day = pivot[c]
-        weights = pivot['prop_head']
+        weights = pivot['prop_lu']
         
         mask1 = ~np.isnan(feed_per_cow)
         inner_dict[c] = np.average(feed_per_cow[mask1],weights=weights[mask1]) #deals with nans  
@@ -253,15 +256,15 @@ for e in out_dict_ordered.keys():
     plt.close()
 
 ###Save excel
-pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[], 'LU-Weighted Mean Mass per housed day (t/head/day)':[], 'LU-Weighted Mean Housed Percent':[]}
+pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/LU)':[], 'LU-Weighted Mean Mass per housed day (t/LU/day)':[], 'LU-Weighted Mean Housed Percent':[]}
 
 
 for e,v in out_dict_ordered.items():
    pd_dict['Enterprise Item']=pd_dict['Enterprise Item']+[e]*len(v)
    pd_dict['Crop Name']+=list(v.keys())
    pd_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
-   pd_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass[e][crop] for crop in v.keys() ]
-   pd_dict['LU-Weighted Mean Mass per housed day (t/head/day)']+=[out_mass_per_housed_day[e][crop] for crop in v.keys() ]
+   pd_dict['LU-Weighted Mean Mass (t/LU)']+=[out_mass[e][crop] for crop in v.keys() ]
+   pd_dict['LU-Weighted Mean Mass per housed day (t/LU/day)']+=[out_mass_per_housed_day[e][crop] for crop in v.keys() ]
    pd_dict['LU-Weighted Mean Housed Percent']+=[mean_house_percent[e]] * len(v)
 
 out_df_all_crop=pd.DataFrame(pd_dict)
@@ -323,14 +326,14 @@ plt.savefig(save_dir + 'feed_grouping/ALL_GROUPED_diet_bars.png', dpi=300)
 
 #Save excel
 
-pd_group_dict={'Enterprise Item':[],'Group Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/head)':[], 'LU-Weighted Mean Mass per housed day (t/head/day)':[],'LU-Weighted Mean Housed Percent':[]}
+pd_group_dict={'Enterprise Item':[],'Group Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/LU)':[], 'LU-Weighted Mean Mass per housed day (t/LU/day)':[],'LU-Weighted Mean Housed Percent':[]}
 
 for e,v in out_dict_grouped.items():
     pd_group_dict['Enterprise Item']+=[e]*len(v)
     pd_group_dict['Group Name']+=list(v.keys())
     pd_group_dict['LU-Weighted Mean Proportion']+=list(v.values()) 
-    pd_group_dict['LU-Weighted Mean Mass (t/head)']+=[out_mass_grouped[e][group] for group in v.keys() ]
-    pd_group_dict['LU-Weighted Mean Mass per housed day (t/head/day)']+=[out_mass_per_housed_day_grouped[e][group] for group in v.keys() ]
+    pd_group_dict['LU-Weighted Mean Mass (t/LU)']+=[out_mass_grouped[e][group] for group in v.keys() ]
+    pd_group_dict['LU-Weighted Mean Mass per housed day (t/LU/day)']+=[out_mass_per_housed_day_grouped[e][group] for group in v.keys() ]
     pd_group_dict['LU-Weighted Mean Housed Percent']+=[mean_house_percent[e]] * len(v)
     
 out_df_grouped=pd.DataFrame(pd_group_dict)
