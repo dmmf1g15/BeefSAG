@@ -235,25 +235,27 @@ for e,v in out_mass.items():
 ###Analayssis using indiviual crops.  
 ##    mean_house_percent
 
-highlight_value=5
+
 # Compute the maximum value across all plots
 y_max = max(max(ex.values()) for ex in out_dict_ordered.values()) * 100
-for e in out_dict_ordered.keys():
-    ex=out_dict_ordered[e]
-    f=plt.figure(figsize=(16, 6))
-    colors = ['red' if v*100 > highlight_value else 'blue' for v in ex.values()] #highlight big vlaues
-    
-    plt.bar(ex.keys(),[v*100 for v in ex.values()],color=colors)
-    xticks=plt.xticks(rotation=45, ha='right',fontsize=5)[1]
-    for tick, v in zip(xticks, ex.values()):
-        if v*100 > highlight_value:
-            tick.set_color('red')
-    plt.ylim(0, y_max)
-    plt.tight_layout(pad=3.0)
-    plt.ylabel('Percent DM diet')
-    plt.title(e)
-    plt.savefig(save_dir+str(e)+'_diet_bar.png',dpi=300)
-    plt.close()
+fig, axes = plt.subplots(nrows=len(out_dict_ordered), ncols=1, figsize=(14, 5 * len(out_dict_ordered)))
+for ax, ex in zip(axes, out_dict_ordered.keys()):
+    ex=out_dict_ordered[ex]
+    ex= {k: v for k, v in ex.items() if v > 1e-4}  # remove close to zero entries to make plot clearer. We will add them back in later when we do the grouped version.
+    ex=dict(sorted(ex.items(), key=lambda item: item[1], reverse=True)) #order by value sort biggest to smallet
+    colors = ['green' if k.split('_')[-1]=='hg'  else 'blue' for k in ex.keys()]
+    ax.bar(ex.keys(),[v*100 for v in ex.values()], color=colors)
+    ax.set_xticks(range(len(ex.keys())))
+    ax.set_xticklabels(ex.keys(), rotation=45, ha='right', fontsize=10)
+    for tick, k in zip(ax.get_xticklabels(), ex.keys()):
+        if k.split('_')[-1]=='hg':
+            tick.set_color('green')
+    ax.set_ylim(0, y_max)
+    ax.set_ylabel('Percent DM diet')
+    ax.set_title(ex,fontweight='bold')
+plt.tight_layout(pad=3.0)
+plt.savefig(save_dir+'combined_diet_bar.png',dpi=150,bbox_inches='tight')
+plt.close()
 
 ###Save excel
 pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/LU)':[], 'LU-Weighted Mean Mass per housed day (t/LU/day)':[], 'LU-Weighted Mean Housed Percent':[]}
@@ -431,7 +433,7 @@ for r in bought_in_df['Report ID'].unique():
  
  '''
  
- 
+plt.close('all')
  
                           
 
