@@ -232,30 +232,52 @@ out_mass_per_housed_day={} #copy the dict
 for e,v in out_mass.items():
     inner_dict={crop:mass/(mean_house_percent[e]*365/100) for crop,mass in v.items()}
     out_mass_per_housed_day[e]=inner_dict
-###Analayssis using indiviual crops.  
-##    mean_house_percent
 
 
-# Compute the maximum value across all plots
+plt.close('all')
+
 y_max = max(max(ex.values()) for ex in out_dict_ordered.values()) * 100
-fig, axes = plt.subplots(nrows=len(out_dict_ordered), ncols=1, figsize=(14, 5 * len(out_dict_ordered)))
-for ax, ex in zip(axes, out_dict_ordered.keys()):
-    ex=out_dict_ordered[ex]
-    ex= {k: v for k, v in ex.items() if v > 1e-4}  # remove close to zero entries to make plot clearer. We will add them back in later when we do the grouped version.
-    ex=dict(sorted(ex.items(), key=lambda item: item[1], reverse=True)) #order by value sort biggest to smallet
-    colors = ['green' if k.split('_')[-1]=='hg'  else 'blue' for k in ex.keys()]
-    ax.bar(ex.keys(),[v*100 for v in ex.values()], color=colors)
-    ax.set_xticks(range(len(ex.keys())))
-    ax.set_xticklabels(ex.keys(), rotation=45, ha='right', fontsize=10)
-    for tick, k in zip(ax.get_xticklabels(), ex.keys()):
-        if k.split('_')[-1]=='hg':
+n_rows = len(out_dict_ordered)
+
+fig, axes = plt.subplots(nrows=n_rows, ncols=1, figsize=(12, 6* n_rows))
+
+if n_rows == 1:
+    axes = [axes]
+
+for ax, e in zip(axes, out_dict_ordered.keys()):
+    # Data processing
+    ex_raw = out_dict_ordered[e]
+    ex_filtered = {k: v for k, v in ex_raw.items() if v > 1e-4}
+    ex_sorted = dict(sorted(ex_filtered.items(), key=lambda item: item[1], reverse=True))
+    
+    keys = list(ex_sorted.keys())
+    values = [v * 100 for v in ex_sorted.values()]
+    colors = ['green' if k.split('_')[-1] == 'hg' else 'blue' for k in keys]
+    
+    # Plotting
+    ax.bar(keys, values, color=colors)
+    
+    # Tick formatting (Using the warning-fix from before)
+    ax.set_xticks(range(len(keys)))
+    ax.set_xticklabels(keys, rotation=45, ha='right', fontsize=9)
+    
+    # Color specific ticks
+    for tick, k in zip(ax.get_xticklabels(), keys):
+        if k.split('_')[-1] == 'hg':
             tick.set_color('green')
+            
     ax.set_ylim(0, y_max)
-    ax.set_ylabel('Percent DM diet')
-    ax.set_title(ex,fontweight='bold')
-plt.tight_layout(pad=3.0)
-plt.savefig(save_dir+'combined_diet_bar.png',dpi=150,bbox_inches='tight')
-plt.close()
+    ax.set_ylabel('Percent DM diet', fontsize=10)
+    ax.set_title(e, fontweight='bold', pad=10)
+
+
+plt.tight_layout(pad=3.0) # pad adds room around the edges of the figure
+# Use a standard 100 DPI - this is perfectly fine for high-res PNGs of this size
+save_path = save_dir + 'combined_diet_bar.png'
+plt.savefig(save_path, dpi=100, bbox_inches='tight')
+print(f"Successfully saved to {save_path}")
+
+plt.close(fig) # Essential for preventing the next run from crashing
 
 ###Save excel
 pd_dict={'Enterprise Item':[],'Crop Name':[], 'LU-Weighted Mean Proportion':[], 'LU-Weighted Mean Mass (t/LU)':[], 'LU-Weighted Mean Mass per housed day (t/LU/day)':[], 'LU-Weighted Mean Housed Percent':[]}
