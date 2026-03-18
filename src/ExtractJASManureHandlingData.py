@@ -73,7 +73,7 @@ if __name__=="__main__":
     
     
     #Switches for plotting if needed
-    plotting='nuts' #chose #nuts or LAD to decide what gets plot.
+    plotting='LAD' #chose #nuts or LAD to decide what gets plot.
     
     geoplotting={'nuts':{'shapes':NUTS2,'col':'ITL225CD','df':nuts_df,'map_col':'ITL225CD'},
                  'LAD':{'shapes':LADS,'col':'LAD22CD','df':map_df,'map_col':'LAD22CD'}
@@ -184,24 +184,44 @@ if __name__=="__main__":
     
     #Join dcitionary onto df and plot
     key_to_plot='liquid_mean'
-    fig,axs=plt.subplots(nrows=1,ncols=2, figsize=(10, 5), constrained_layout=True)
+    fig,axs=plt.subplots(nrows=1,ncols=2, figsize=(8, 5), constrained_layout=True)
+    fig.set_constrained_layout_pads(wspace=0.02)
     axs=axs.flatten() #an axs for each beef type
     cmap = 'viridis'
     #To normalise color map 0-100
-    norm = Normalize(vmin=0, vmax=100)
+    #norm = Normalize(vmin=0, vmax=100)
+    #Get max values to fix colobar sclae
+    max_val=max([v[bt][key_to_plot] for k,v in out_liquid_region.items() for bt in v.keys()])
+    norm = Normalize(vmin=0, vmax=max_val*100)
     gdf=geoplotting[plotting]['df'] #pick it out for ease of syntax
     for i,bt in enumerate(list(beef_groups.keys())): #bt=<1 ot >1 here
         mapper_dict={k:v[bt][key_to_plot] for k,v in out_liquid_region.items()} #to join
         
         gdf[bt+'_mean']=gdf[geoplotting[plotting]['map_col']].map(mapper_dict)
+        gdf[bt+'_mean']=gdf[bt+'_mean']*100
         #gdf=gdf.dropna(subset=[bt+'_mean'])
-        gdf_plot=gdf.plot(column=bt + '_mean', cmap=cmap,ax=axs[i],norm=None, legend=True,missing_kwds={'color': 'lightgrey'})
+        if i==1:
+            legend=True
+        else:
+            legend=False
+        gdf_plot = gdf.plot(
+                column=bt + '_mean',
+                cmap=cmap,
+                ax=axs[i],
+                norm=norm,
+                legend=legend,
+                missing_kwds={'color': 'lightgrey'},
+                legend_kwds={
+                    'label': '% Manure managed as liquid',
+                    'ax': axs[i]   
+                }
+            )
         #axs[i].set_aspect('auto')
         axs[i].axis('off')
         wrapped_title = textwrap.fill(bt, width=40)
         axs[i].set_title(wrapped_title,fontsize=14)
-        colorbar = gdf_plot.get_figure().get_axes()[1]  # second axis is the colorbar
-        colorbar.set_ylabel('% Manure managed as liquid', fontsize=12)
+        #colorbar = gdf_plot.get_figure().get_axes()[1]  # second axis is the colorbar
+        #colorbar.set_ylabel('% Manure managed as liquid', fontsize=12)
         
     #plt.show()
     axs[-1].axis('off')

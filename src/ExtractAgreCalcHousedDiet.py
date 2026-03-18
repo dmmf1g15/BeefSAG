@@ -259,7 +259,7 @@ for ax, e in zip(axes, out_dict_ordered.keys()):
     
     # Tick formatting (Using the warning-fix from before)
     ax.set_xticks(range(len(keys)))
-    ax.set_xticklabels(keys, rotation=45, ha='right', fontsize=9)
+    ax.set_xticklabels(keys, rotation=45, ha='right', fontsize=6)
     
     # Color specific ticks
     for tick, k in zip(ax.get_xticklabels(), keys):
